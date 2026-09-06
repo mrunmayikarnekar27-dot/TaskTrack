@@ -47,19 +47,21 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
 def get_db_connection():
     try:
-        return mysql.connector.connect(
+        connection = mysql.connector.connect(
             host=DB_CONFIG["host"],
             user=DB_CONFIG["user"],
             password=DB_CONFIG["password"],
             database=DB_CONFIG["database"],
-            port=DB_CONFIG["port"]
+            port=DB_CONFIG["port"],
+            ssl_ca=os.environ.get("DB_SSL_CA"),
+            ssl_verify_cert=True
         )
+        return connection
     except Error as e:
         print(
             "DATABASE CONNECTION ERROR:",
             e
         )
-
         return None
 
 
