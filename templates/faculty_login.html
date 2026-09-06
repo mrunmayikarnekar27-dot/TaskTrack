@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Faculty Login | TaskTrack</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body class="auth-body">
+
+    <div class="auth-page">
+
+        <div class="auth-brand">
+
+            <a href="{{ url_for('index') }}">
+
+                <span class="brand-mark">T</span>
+
+                <span class="brand-name">
+                    TaskTrack
+                </span>
+
+            </a>
+
+        </div>
+
+
+        <div class="auth-card">
+
+            <div class="auth-icon faculty-auth-icon">
+                👨‍🏫
+            </div>
+
+            <span class="auth-label">
+                FACULTY PORTAL
+            </span>
+
+            <h1>Welcome back</h1>
+
+            <p class="auth-subtitle">
+                Login to manage assignments and student submissions.
+            </p>
+
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+            {% for category, message in messages %}
+
+            <div class="flash-message {{ category }}">
+                {{ message }}
+            </div>
+
+            {% endfor %}
+
+            {% endif %}
+
+            {% endwith %}
+
+
+            <form method="POST" class="auth-form">
+
+                <div class="form-group">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+                </div>
+
+
+                <button type="submit" class="btn btn-secondary btn-full">
+
+                    Login as Faculty
+                    <span>→</span>
+
+                </button>
+
+            </form>
+
+
+            <p class="auth-bottom-text">
+
+                Don't have a faculty account?
+
+                <a href="{{ url_for('register') }}">
+                    Create Account
+                </a>
+
+            </p>
+
+
+            <a href="{{ url_for('index') }}" class="back-link">
+
+                ← Back to Home
+
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

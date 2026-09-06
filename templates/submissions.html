@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    ```
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Submissions | TaskTrack</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    ```
+
+</head>
+
+<body class="portal-body">
+
+    ```
+    <div class="portal-layout">
+
+
+        <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+        <aside class="sidebar">
+
+
+            <!-- BRAND -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-mark">
+                    T
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        TaskTrack
+                    </strong>
+
+                    <span>
+                        Faculty Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- NAVIGATION -->
+
+            <nav class="sidebar-nav">
+
+
+                <span class="nav-section-title">
+                    MAIN MENU
+                </span>
+
+
+                <!-- Dashboard -->
+
+                <a href="{{ url_for('faculty_dashboard') }}" class="sidebar-link">
+
+                    <span class="sidebar-icon">
+                        ⌂
+                    </span>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+
+                <!-- Upload Assignment -->
+
+                <a href="{{ url_for('faculty_upload') }}" class="sidebar-link">
+
+                    <span class="sidebar-icon">
+                        ＋
+                    </span>
+
+                    <span>
+                        Upload Assignment
+                    </span>
+
+                </a>
+
+
+
+                <!-- Submissions -->
+
+                <a href="{{ url_for('faculty_submissions') }}" class="sidebar-link active">
+
+                    <span class="sidebar-icon">
+                        ✓
+                    </span>
+
+                    <span>
+                        Submissions
+                    </span>
+
+                </a>
+
+
+            </nav>
+
+
+
+            <!-- USER DETAILS -->
+
+            <div class="sidebar-bottom">
+
+
+                <div class="sidebar-user">
+
+
+                    <div class="user-avatar">
+
+                        {{ session.get('name', 'F')[0]|upper }}
+
+                    </div>
+
+
+                    <div class="user-details">
+
+                        <strong>
+
+                            {{ session.get(
+                            'name',
+                            'Faculty'
+                            ) }}
+
+                        </strong>
+
+
+                        <span>
+                            Faculty
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- LOGOUT -->
+
+                <a href="{{ url_for('logout') }}" class="sidebar-logout">
+
+                    <span>
+                        ↪
+                    </span>
+
+                    Logout
+
+                </a>
+
+
+            </div>
+
+
+        </aside>
+
+
+
+        <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+        <main class="portal-main">
+
+
+            <!-- PAGE HEADER -->
+
+            <header class="portal-header">
+
+
+                <div>
+
+
+                    <span class="page-kicker">
+                        FACULTY PORTAL
+                    </span>
+
+
+                    <h1>
+                        Submission Management
+                    </h1>
+
+
+                    <p>
+                        View and manage student assignment submissions.
+                    </p>
+
+
+                </div>
+
+
+            </header>
+
+
+
+            <!-- =================================================
+             FLASH MESSAGES
+             ================================================= -->
+
+            {% with messages = get_flashed_messages(
+            with_categories=true
+            ) %}
+
+
+            {% if messages %}
+
+
+            <div class="flash-container">
+
+
+                {% for category, message in messages %}
+
+
+                <div class="flash-message {{ category }}">
+
+                    {{ message }}
+
+                </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+            {% endif %}
+
+
+            {% endwith %}
+
+
+
+            <!-- =================================================
+             SUBMISSION MANAGEMENT
+             ================================================= -->
+
+            <section class="content-section">
+
+
+                <!-- SECTION HEADING -->
+
+                <div class="section-heading">
+
+
+                    <div>
+
+
+                        <span class="section-kicker">
+                            STUDENT WORK
+                        </span>
+
+
+                        <h2>
+                            Assignment Submissions
+                        </h2>
+
+
+                        <p>
+                            View student submissions and download
+                            submitted assignment files.
+                        </p>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =============================================
+                 FILTER SECTION
+                 ============================================= -->
+
+                <div class="submission-filter-card">
+
+
+                    <div class="filter-heading">
+
+
+                        <div>
+
+
+                            <span class="filter-kicker">
+                                FILTER SUBMISSIONS
+                            </span>
+
+
+                            <h3>
+                                Filter by Department and Year
+                            </h3>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <!-- FILTER FORM -->
+
+                    <form method="GET" action="{{ url_for(
+                          'faculty_submissions'
+                      ) }}" class="submission-filter-form">
+
+
+                        <!-- =====================================
+                         DEPARTMENT
+                         ===================================== -->
+
+                        <div class="filter-group">
+
+
+                            <label for="department">
+
+                                Department
+
+                            </label>
+
+
+                            <select name="department" id="department">
+
+
+                                <option value="">
+
+                                    All Departments
+
+                                </option>
+
+
+                                <option value="BSc IT" {% if selected_department=="BSc IT" %} selected {% endif %}>
+
+                                    BSc IT
+
+                                </option>
+
+
+                                <option value="BSc CS" {% if selected_department=="BSc CS" %} selected {% endif %}>
+
+                                    BSc CS
+
+                                </option>
+
+
+                                <option value="BCA" {% if selected_department=="BCA" %} selected {% endif %}>
+
+                                    BCA
+
+                                </option>
+
+
+                                <option value="BCom" {% if selected_department=="BCom" %} selected {% endif %}>
+
+                                    BCom
+
+                                </option>
+
+
+                                <option value="BBA" {% if selected_department=="BBA" %} selected {% endif %}>
+
+                                    BBA
+
+                                </option>
+
+
+                            </select>
+
+
+                        </div>
+
+
+
+                        <!-- =====================================
+                         YEAR OF STUDY
+                         ===================================== -->
+
+                        <div class="filter-group">
+
+
+                            <label for="year_of_study">
+
+                                Year of Study
+
+                            </label>
+
+
+                            <select name="year_of_study" id="year_of_study">
+
+
+                                <option value="">
+
+                                    All Years
+
+                                </option>
+
+
+                                <option value="FY" {% if selected_year=="FY" %} selected {% endif %}>
+
+                                    FY
+
+                                </option>
+
+
+                                <option value="SY" {% if selected_year=="SY" %} selected {% endif %}>
+
+                                    SY
+
+                                </option>
+
+
+                                <option value="TY" {% if selected_year=="TY" %} selected {% endif %}>
+
+                                    TY
+
+                                </option>
+
+
+                            </select>
+
+
+                        </div>
+
+
+
+                        <!-- FILTER BUTTON -->
+
+                        <button type="submit" class="btn btn-primary filter-btn">
+
+                            Filter
+
+                        </button>
+
+
+
+                        <!-- CLEAR FILTER -->
+
+                        {% if selected_department or selected_year %}
+
+
+                        <a href="{{ url_for(
+                            'faculty_submissions'
+                        ) }}" class="btn btn-outline filter-clear-btn">
+
+                            Clear Filters
+
+                        </a>
+
+
+                        {% endif %}
+
+
+                    </form>
+
+
+                </div>
+
+
+
+                <!-- =============================================
+                 ACTIVE FILTER INFORMATION
+                 ============================================= -->
+
+                {% if selected_department or selected_year %}
+
+
+                <div class="active-filter-info">
+
+
+                    <span>
+                        Showing submissions for:
+                    </span>
+
+
+
+                    {% if selected_department %}
+
+
+                    <strong>
+
+                        {{ selected_department }}
+
+                    </strong>
+
+
+                    {% endif %}
+
+
+
+                    {% if selected_department and selected_year %}
+
+
+                    <span class="filter-separator">
+
+                        •
+
+                    </span>
+
+
+                    {% endif %}
+
+
+
+                    {% if selected_year %}
+
+
+                    <strong>
+
+                        {{ selected_year }}
+
+                    </strong>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+                {% endif %}
+
+
+
+                <!-- =============================================
+                 SUBMISSIONS TABLE
+                 ============================================= -->
+
+                {% if submissions %}
+
+
+                <div class="table-card">
+
+
+                    <div class="table-wrapper">
+
+
+                        <table class="data-table">
+
+
+                            <!-- TABLE HEADER -->
+
+                            <thead>
+
+
+                                <tr>
+
+
+                                    <th>
+                                        Student
+                                    </th>
+
+
+                                    <th>
+                                        Student Email
+                                    </th>
+
+
+                                    <th>
+                                        Assignment
+                                    </th>
+
+
+                                    <th>
+                                        Department
+                                    </th>
+
+
+                                    <th>
+                                        Year
+                                    </th>
+
+
+                                    <th>
+                                        Submitted
+                                    </th>
+
+
+                                    <th>
+                                        Submitted File
+                                    </th>
+
+
+                                    <th>
+                                        Action
+                                    </th>
+
+
+                                </tr>
+
+
+                            </thead>
+
+
+
+                            <!-- TABLE BODY -->
+
+                            <tbody>
+
+
+                                {% for submission in submissions %}
+
+
+                                <tr>
+
+
+                                    <!-- STUDENT -->
+
+                                    <td>
+
+
+                                        <div class="student-table-info">
+
+
+                                            <div class="table-avatar">
+
+
+                                                {% if submission.student_name %}
+
+                                                {{
+                                                submission.student_name[0]
+                                                |upper
+                                                }}
+
+                                                {% else %}
+
+                                                S
+
+                                                {% endif %}
+
+
+                                            </div>
+
+
+                                            <strong>
+
+                                                {{
+                                                submission.student_name
+                                                }}
+
+                                            </strong>
+
+
+                                        </div>
+
+
+                                    </td>
+
+
+
+                                    <!-- STUDENT EMAIL -->
+
+                                    <td>
+
+                                        {{ submission.student_email }}
+
+                                    </td>
+
+
+
+                                    <!-- ASSIGNMENT -->
+
+                                    <td>
+
+
+                                        <span class="assignment-name">
+
+                                            {{
+                                            submission.assignment_title
+                                            }}
+
+                                        </span>
+
+
+                                    </td>
+
+
+
+                                    <!-- DEPARTMENT -->
+
+                                    <td>
+
+                                        {{
+                                        submission.department or '—'
+                                        }}
+
+                                    </td>
+
+
+
+                                    <!-- YEAR -->
+
+                                    <td>
+
+                                        {{
+                                        submission.year_of_study or '—'
+                                        }}
+
+                                    </td>
+
+
+
+                                    <!-- SUBMITTED DATE -->
+
+                                    <td>
+
+                                        {{
+                                        submission.submitted_at
+                                        }}
+
+                                    </td>
+
+
+
+                                    <!-- SUBMITTED FILE -->
+
+                                    <td>
+
+
+                                        <span class="file-name">
+
+                                            📄
+
+                                            {{
+                                            submission.submitted_file
+                                            }}
+
+                                        </span>
+
+
+                                    </td>
+
+
+
+                                    <!-- DOWNLOAD -->
+
+                                    <td>
+
+
+                                        <a href="{{ url_for(
+                                            'download_submission',
+                                            filename=submission.submitted_file
+                                        ) }}" class="table-action">
+
+                                            Download
+
+                                        </a>
+
+
+                                    </td>
+
+
+                                </tr>
+
+
+                                {% endfor %}
+
+
+                            </tbody>
+
+
+                        </table>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =============================================
+                 NO SUBMISSIONS
+                 ============================================= -->
+
+                {% else %}
+
+
+                <div class="empty-state">
+
+
+                    <div class="empty-icon">
+
+                        ✓
+
+                    </div>
+
+
+
+                    {% if selected_department or selected_year %}
+
+
+                    <h3>
+                        No matching submissions found
+                    </h3>
+
+
+                    <p>
+                        No student submissions were found for
+                        the selected department and year.
+                    </p>
+
+
+                    <a href="{{ url_for(
+                        'faculty_submissions'
+                    ) }}" class="btn btn-outline">
+
+                        Clear Filters
+
+                    </a>
+
+
+                    {% else %}
+
+
+                    <h3>
+                        No submissions yet
+                    </h3>
+
+
+                    <p>
+                        Student submissions will appear here
+                        once students submit their assignments.
+                    </p>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+                {% endif %}
+
+
+            </section>
+
+
+        </main>
+
+
+    </div>
+    ```
+
+</body>
+
+</html>

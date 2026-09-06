@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Faculty Dashboard | TaskTrack</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body class="portal-body">
+
+
+    <div class="portal-layout">
+
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div class="sidebar-brand">
+
+                <div class="brand-mark">
+                    T
+                </div>
+
+                <div>
+
+                    <strong>TaskTrack</strong>
+
+                    <span>
+                        Faculty Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <span class="nav-section-title">
+                    MAIN MENU
+                </span>
+
+
+                <a href="{{ url_for('faculty_dashboard') }}" class="sidebar-link active">
+
+                    <span class="sidebar-icon">
+                        ⌂
+                    </span>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="{{ url_for('faculty_upload') }}" class="sidebar-link">
+
+                    <span class="sidebar-icon">
+                        ＋
+                    </span>
+
+                    <span>
+                        Upload Assignment
+                    </span>
+
+                </a>
+
+
+                <a href="{{ url_for('faculty_submissions') }}" class="sidebar-link">
+
+                    <span class="sidebar-icon">
+                        ✓
+                    </span>
+
+                    <span>
+                        Submissions
+                    </span>
+
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <div class="sidebar-user">
+
+                    <div class="user-avatar">
+                        {{ session.get('name', 'F')[0]|upper }}
+                    </div>
+
+                    <div class="user-details">
+
+                        <strong>
+                            {{ session.get('name', 'Faculty') }}
+                        </strong>
+
+                        <span>
+                            Faculty
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <a href="{{ url_for('logout') }}" class="sidebar-logout">
+
+                    <span>↪</span>
+                    Logout
+
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN -->
+
+        <main class="portal-main">
+
+
+            <header class="portal-header">
+
+                <div>
+
+                    <span class="page-kicker">
+                        FACULTY PORTAL
+                    </span>
+
+                    <h1>
+                        Dashboard
+                    </h1>
+
+                    <p>
+                        Manage your assignments and monitor submissions.
+                    </p>
+
+                </div>
+
+
+                <div class="header-actions">
+
+                    <a href="{{ url_for('faculty_upload') }}" class="btn btn-primary">
+
+                        + Upload Assignment
+
+                    </a>
+
+                </div>
+
+            </header>
+
+
+            <!-- FLASH -->
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+            <div class="flash-container">
+
+                {% for category, message in messages %}
+
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+            {% endwith %}
+
+
+            <!-- STATS -->
+
+            <section class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon peach-icon">
+                        #
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Assignments
+                        </span>
+
+                        <strong>
+                            {{ assignment_count }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon sage-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Submissions
+                        </span>
+
+                        <strong>
+                            {{ submission_count }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon cream-icon">
+                        👥
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Students Submitted
+                        </span>
+
+                        <strong>
+                            {{ students_submitted }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ASSIGNMENTS -->
+
+            <section class="content-section">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            ASSIGNMENT MANAGEMENT
+                        </span>
+
+                        <h2>
+                            Your Assignments
+                        </h2>
+
+                        <p>
+                            Manage the assignments you have uploaded.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {% if assignments %}
+
+                <div class="faculty-assignment-list">
+
+                    {% for assignment in assignments %}
+
+                    <article class="faculty-assignment-card">
+
+                        <div class="faculty-assignment-main">
+
+                            <div class="subject-badge">
+                                {{ assignment.subject }}
+                            </div>
+
+                            <h3>
+                                {{ assignment.title }}
+                            </h3>
+
+                            <p>
+                                {{ assignment.description or
+                                'No description provided.' }}
+                            </p>
+
+
+                            <div class="assignment-meta">
+
+                                <span>
+                                    📅
+                                    Due:
+                                    {{ assignment.due_date }}
+                                </span>
+
+                                <span>
+                                    🎓
+                                    {{ assignment.department }}
+                                </span>
+
+                                <span>
+                                    Year:
+                                    {{ assignment.year_of_study }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="faculty-assignment-side">
+
+                            <div class="submission-count">
+
+                                <strong>
+                                    {{ assignment.submission_count }}
+                                </strong>
+
+                                <span>
+                                    submissions
+                                </span>
+
+                            </div>
+
+
+                            <div class="card-actions">
+
+                                {% if assignment.file_name %}
+
+                                <a href="{{ url_for(
+                                            'download_assignment',
+                                            filename=assignment.file_name
+                                        ) }}" class="btn btn-small btn-outline">
+
+                                    Download
+
+                                </a>
+
+                                {% endif %}
+
+
+                                <a href="{{ url_for(
+                                        'faculty_assignment_submissions',
+                                        assignment_id=assignment.id
+                                    ) }}" class="btn btn-small btn-primary">
+
+                                    View Submissions
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        ＋
+                    </div>
+
+                    <h3>
+                        No assignments uploaded
+                    </h3>
+
+                    <p>
+                        Start by creating your first assignment.
+                    </p>
+
+                    <a href="{{ url_for('faculty_upload') }}" class="btn btn-primary">
+
+                        Upload Assignment
+
+                    </a>
+
+                </div>
+
+                {% endif %}
+
+            </section>
+
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

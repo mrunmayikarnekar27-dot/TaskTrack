@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TaskTrack | Smart Assignment Management</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="landing-body">
+
+    <!-- NAVBAR -->
+    <header class="landing-navbar">
+
+        <div class="brand">
+            <div class="brand-mark">T</div>
+
+            <div class="brand-text">
+                <span class="brand-name">TaskTrack</span>
+                <span class="brand-tagline">Manage better. Accomplish more.</span>
+            </div>
+        </div>
+
+        <nav class="landing-nav">
+            <a href="{{ url_for('student_login') }}">
+                Student Login
+            </a>
+
+            <a href="{{ url_for('faculty_login') }}" class="nav-login">
+                Faculty Login
+            </a>
+        </nav>
+
+    </header>
+
+
+    <!-- MAIN HERO -->
+    <main class="hero-section">
+
+        <div class="hero-content">
+
+            <span class="hero-label">
+                SMART ASSIGNMENT MANAGEMENT
+            </span>
+
+            <h1 class="hero-small-heading">
+                Stay organised.<br>
+                <span>Submit with confidence.</span>
+            </h1>
+
+            <p>
+                TaskTrack provides a simple and organised space for
+                students and faculty to manage assignments, submissions
+                and academic work efficiently.
+            </p>
+
+            <div class="hero-actions">
+
+                <button type="button" class="btn btn-primary btn-large" onclick="openAccountModal()">
+
+                    Get Started
+                    <span>→</span>
+
+                </button>
+
+                <a href="{{ url_for('student_login') }}" class="btn btn-outline btn-large">
+                    Student Login
+                </a>
+
+                <a href="{{ url_for('faculty_login') }}" class="btn btn-soft btn-large">
+                    Faculty Login
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- HERO VISUAL -->
+        <div class="hero-visual">
+
+            <div class="dashboard-preview">
+
+                <div class="preview-top">
+                    <div class="preview-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <span class="preview-title">
+                        TaskTrack
+                    </span>
+                </div>
+
+                <div class="preview-content">
+
+                    <div class="preview-welcome">
+                        <div>
+                            <small class="welcome-text">WELCOME BACK</small>
+                            <h3>Your work, organised.</h3>
+                        </div>
+
+                        <div class="preview-avatar">
+                            T
+                        </div>
+                    </div>
+
+                    <div class="preview-stats">
+
+                        <div class="preview-stat">
+                            <strong>08</strong>
+                            <span>Assignments</span>
+                        </div>
+
+                        <div class="preview-stat">
+                            <strong>05</strong>
+                            <span>Submitted</span>
+                        </div>
+
+                        <div class="preview-stat">
+                            <strong>03</strong>
+                            <span>Pending</span>
+                        </div>
+
+                    </div>
+
+                    <div class="preview-task">
+
+                        <div class="preview-task-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            <strong>Database Management</strong>
+                            <span>Assignment submission</span>
+                        </div>
+
+                        <span class="preview-status">
+                            Active
+                        </span>
+
+                    </div>
+
+                    <div class="preview-task">
+
+                        <div class="preview-task-icon peach">
+                            →
+                        </div>
+
+                        <div>
+                            <strong>Python Programming</strong>
+                            <span>Due soon</span>
+                        </div>
+
+                        <span class="preview-status pending">
+                            Pending
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- SMALL FOOTER -->
+    <footer class="landing-footer">
+
+        <span>© 2026 TaskTrack</span>
+
+        <span>
+            Smart Assignment Management System
+        </span>
+
+    </footer>
+
+
+    <!-- ACCOUNT MODAL -->
+    <div id="accountModal" class="modal-overlay" onclick="closeAccountModal(event)">
+
+        <div class="account-modal" onclick="event.stopPropagation()">
+
+            <button class="modal-close" onclick="closeAccountModal()">
+                ×
+            </button>
+
+            <div class="modal-icon">
+                +
+            </div>
+
+            <span class="modal-label">
+                GET STARTED
+            </span>
+
+            <h2>Create your TaskTrack account</h2>
+
+            <p>
+                Choose the type of account you want to create.
+            </p>
+
+
+            <div class="account-choice-grid">
+
+                <a href="{{ url_for('student_register') }}" class="account-choice student-choice">
+
+                    <div class="choice-icon">
+                        🎓
+                    </div>
+
+                    <div class="choice-content">
+                        <h3>Student Account</h3>
+
+                        <p>
+                            Create an account to view assignments
+                            and submit your work.
+                        </p>
+                    </div>
+
+                    <span class="choice-arrow">→</span>
+
+                </a>
+
+
+                <a href="{{ url_for('register') }}" class="account-choice faculty-choice">
+
+                    <div class="choice-icon">
+                        👨‍🏫
+                    </div>
+
+                    <div class="choice-content">
+                        <h3>Faculty Account</h3>
+
+                        <p>
+                            Create an account to upload assignments
+                            and view student submissions.
+                        </p>
+                    </div>
+
+                    <span class="choice-arrow">→</span>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        function openAccountModal() {
+            document.getElementById("accountModal")
+                .classList.add("show");
+
+            document.body.classList.add("modal-open");
+        }
+
+
+        function closeAccountModal(event) {
+
+            if (
+                !event ||
+                event.target.id === "accountModal"
+            ) {
+
+                document.getElementById("accountModal")
+                    .classList.remove("show");
+
+                document.body.classList.remove("modal-open");
+            }
+        }
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (event.key === "Escape") {
+                    closeAccountModal();
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

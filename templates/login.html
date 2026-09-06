@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login | TaskTrack</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body class="auth-body">
+
+    <div class="auth-page">
+
+        <div class="auth-brand">
+            <a href="{{ url_for('index') }}">
+                <span class="brand-mark">T</span>
+                <span class="brand-name">TaskTrack</span>
+            </a>
+        </div>
+
+
+        <div class="auth-card">
+
+            <div class="auth-icon">
+                🔐
+            </div>
+
+            <span class="auth-label">
+                ACCOUNT LOGIN
+            </span>
+
+            <h1>Login to TaskTrack</h1>
+
+            <p class="auth-subtitle">
+                Choose the appropriate login option.
+            </p>
+
+
+            <div class="login-choice-grid">
+
+                <a href="{{ url_for('student_login') }}" class="login-choice student-choice">
+
+                    <span class="choice-icon">🎓</span>
+
+                    <div>
+                        <strong>Student Login</strong>
+                        <small>
+                            Login to view and submit assignments
+                        </small>
+                    </div>
+
+                    <span>→</span>
+
+                </a>
+
+
+                <a href="{{ url_for('faculty_login') }}" class="login-choice faculty-choice">
+
+                    <span class="choice-icon">👨‍🏫</span>
+
+                    <div>
+                        <strong>Faculty Login</strong>
+                        <small>
+                            Login to manage assignments
+                        </small>
+                    </div>
+
+                    <span>→</span>
+
+                </a>
+
+            </div>
+
+
+            <a href="{{ url_for('index') }}" class="back-link">
+                ← Back to TaskTrack
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

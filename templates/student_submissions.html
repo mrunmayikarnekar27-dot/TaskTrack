@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Submissions | TaskTrack</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body class="portal-body">
+
+
+    <div class="portal-layout">
+
+
+        <aside class="sidebar">
+
+            <div class="sidebar-brand">
+
+                <div class="brand-mark">T</div>
+
+                <div>
+                    <strong>TaskTrack</strong>
+                    <span>Student Portal</span>
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <span class="nav-section-title">
+                    MAIN MENU
+                </span>
+
+
+                <a href="{{ url_for('student_dashboard') }}" class="sidebar-link">
+
+                    <span class="sidebar-icon">
+                        ⌂
+                    </span>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="{{ url_for('student_submissions') }}" class="sidebar-link active">
+
+                    <span class="sidebar-icon">
+                        ✓
+                    </span>
+
+                    <span>
+                        My Submissions
+                    </span>
+
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <div class="sidebar-user">
+
+                    <div class="user-avatar">
+                        {{ session.get('name', 'S')[0]|upper }}
+                    </div>
+
+                    <div class="user-details">
+
+                        <strong>
+                            {{ session.get('name', 'Student') }}
+                        </strong>
+
+                        <span>
+                            Student
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <a href="{{ url_for('logout') }}" class="sidebar-logout">
+
+                    <span>↪</span>
+                    Logout
+
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <main class="portal-main">
+
+
+            <header class="portal-header">
+
+                <div>
+
+                    <span class="page-kicker">
+                        STUDENT PORTAL
+                    </span>
+
+                    <h1>
+                        My Submissions
+                    </h1>
+
+                    <p>
+                        View the assignments you have submitted.
+                    </p>
+
+                </div>
+
+
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline">
+
+                    ← Dashboard
+
+                </a>
+
+            </header>
+
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+            <div class="flash-container">
+
+                {% for category, message in messages %}
+
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+            {% endwith %}
+
+
+            {% if submissions %}
+
+            <section class="submission-grid">
+
+                {% for submission in submissions %}
+
+                <article class="submission-card">
+
+                    <div class="submission-card-header">
+
+                        <div class="submission-file-icon">
+                            ✓
+                        </div>
+
+                        <span class="status-badge submitted">
+                            Submitted
+                        </span>
+
+                    </div>
+
+
+                    <span class="subject-badge">
+                        {{ submission.subject }}
+                    </span>
+
+
+                    <h2>
+                        {{ submission.assignment_title }}
+                    </h2>
+
+
+                    <p>
+                        {{ submission.description or
+                        'No description provided.' }}
+                    </p>
+
+
+                    <div class="submission-info">
+
+                        <div>
+                            <span>Faculty</span>
+                            <strong>
+                                {{ submission.faculty_name or '—' }}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Submitted</span>
+                            <strong>
+                                {{ submission.submitted_at }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="submission-file">
+
+                        <span>📄</span>
+
+                        <div>
+
+                            <strong>
+                                {{ submission.submitted_file }}
+                            </strong>
+
+                            <small>
+                                Your uploaded file
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                {% endfor %}
+
+            </section>
+
+            {% else %}
+
+            <div class="empty-state large-empty">
+
+                <div class="empty-icon">
+                    ✓
+                </div>
+
+                <h3>
+                    No submissions yet
+                </h3>
+
+                <p>
+                    Once you submit an assignment, it will appear here.
+                </p>
+
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary">
+
+                    View Assignments
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>
