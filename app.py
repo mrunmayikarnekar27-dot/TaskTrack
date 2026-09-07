@@ -28,7 +28,6 @@ DB_CONFIG = {
         )
     )
 }
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 ASSIGNMENT_UPLOAD_FOLDER = os.path.join(
@@ -47,16 +46,19 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
 def get_db_connection():
     try:
-        connection = mysql.connector.connect(
+        ssl_ca_path = os.path.join(
+            BASE_DIR,
+            "ca.pem"
+        )
+        return mysql.connector.connect(
             host=DB_CONFIG["host"],
             user=DB_CONFIG["user"],
             password=DB_CONFIG["password"],
             database=DB_CONFIG["database"],
             port=DB_CONFIG["port"],
-            ssl_ca=os.environ.get("DB_SSL_CA"),
+            ssl_ca=ssl_ca_path,
             ssl_verify_cert=True
         )
-        return connection
     except Error as e:
         print(
             "DATABASE CONNECTION ERROR:",
