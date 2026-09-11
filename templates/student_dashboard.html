@@ -33,8 +33,15 @@
                 </div>
 
                 <div>
-                    <strong>TaskTrack</strong>
-                    <span>Student Portal</span>
+
+                    <strong>
+                        TaskTrack
+                    </strong>
+
+                    <span>
+                        Student Portal
+                    </span>
+
                 </div>
 
             </div>
@@ -47,33 +54,52 @@
                 </span>
 
 
+                <!-- DASHBOARD -->
+
                 <a href="{{ url_for('student_dashboard') }}" class="sidebar-link active">
 
-                    <span class="sidebar-icon">⌂</span>
+                    <span class="sidebar-icon">
+                        ⌂
+                    </span>
 
-                    <span>Dashboard</span>
+                    <span>
+                        Dashboard
+                    </span>
 
                 </a>
 
 
+                <!-- MY SUBMISSIONS -->
+
                 <a href="{{ url_for('student_submissions') }}" class="sidebar-link">
 
-                    <span class="sidebar-icon">✓</span>
+                    <span class="sidebar-icon">
+                        ✓
+                    </span>
 
-                    <span>My Submissions</span>
+                    <span>
+                        My Submissions
+                    </span>
 
                 </a>
 
             </nav>
 
 
+            <!-- =================================================
+                 SIDEBAR BOTTOM
+                 ================================================= -->
+
             <div class="sidebar-bottom">
 
                 <div class="sidebar-user">
 
                     <div class="user-avatar">
+
                         {{ session.get('name', 'S')[0]|upper }}
+
                     </div>
+
 
                     <div class="user-details">
 
@@ -90,9 +116,13 @@
                 </div>
 
 
+                <!-- LOGOUT -->
+
                 <a href="{{ url_for('logout') }}" class="sidebar-logout">
 
-                    <span>↪</span>
+                    <span>
+                        ↪
+                    </span>
 
                     Logout
 
@@ -136,7 +166,9 @@
                 <div class="header-profile">
 
                     <div class="header-avatar">
+
                         {{ session.get('name', 'S')[0]|upper }}
+
                     </div>
 
                 </div>
@@ -157,7 +189,9 @@
                 {% for category, message in messages %}
 
                 <div class="flash-message {{ category }}">
+
                     {{ message }}
+
                 </div>
 
                 {% endfor %}
@@ -175,11 +209,15 @@
 
             <section class="student-profile-card">
 
+
                 <div class="profile-main">
 
                     <div class="profile-avatar">
+
                         {{ session.get('name', 'S')[0]|upper }}
+
                     </div>
+
 
                     <div>
 
@@ -200,7 +238,12 @@
                 </div>
 
 
+                <!-- STUDENT ACADEMIC DETAILS -->
+
                 <div class="profile-meta">
+
+
+                    <!-- DEPARTMENT -->
 
                     <div>
 
@@ -209,11 +252,13 @@
                         </span>
 
                         <strong>
-                            {{ department or '—' }}
+                            {{ student.department or '—' }}
                         </strong>
 
                     </div>
 
+
+                    <!-- YEAR -->
 
                     <div>
 
@@ -222,7 +267,7 @@
                         </span>
 
                         <strong>
-                            {{ year_of_study or '—' }}
+                            {{ student.year_of_study or '—' }}
                         </strong>
 
                     </div>
@@ -239,13 +284,16 @@
             <section class="stats-grid">
 
 
-                <!-- TOTAL ASSIGNMENTS -->
+                <!-- =================================================
+                     TOTAL ASSIGNMENTS
+                     ================================================= -->
 
                 <div class="stat-card">
 
                     <div class="stat-icon peach-icon">
                         #
                     </div>
+
 
                     <div>
 
@@ -262,13 +310,16 @@
                 </div>
 
 
-                <!-- SUBMITTED -->
+                <!-- =================================================
+                     SUBMITTED
+                     ================================================= -->
 
                 <div class="stat-card">
 
                     <div class="stat-icon sage-icon">
                         ✓
                     </div>
+
 
                     <div>
 
@@ -285,13 +336,16 @@
                 </div>
 
 
-                <!-- PENDING -->
+                <!-- =================================================
+                     PENDING
+                     ================================================= -->
 
                 <div class="stat-card">
 
                     <div class="stat-icon cream-icon">
                         !
                     </div>
+
 
                     <div>
 
@@ -300,7 +354,7 @@
                         </span>
 
                         <strong>
-                            {{ available_count }}
+                            {{ pending_count }}
                         </strong>
 
                     </div>
@@ -308,13 +362,16 @@
                 </div>
 
 
-                <!-- MY SUBMISSIONS -->
+                <!-- =================================================
+                     MY SUBMISSIONS
+                     ================================================= -->
 
                 <div class="stat-card">
 
                     <div class="stat-icon rose-icon">
                         ↑
                     </div>
+
 
                     <div>
 
@@ -323,7 +380,7 @@
                         </span>
 
                         <strong>
-                            {{ submission_count }}
+                            {{ my_submissions }}
                         </strong>
 
                     </div>
@@ -339,7 +396,9 @@
 
             <section class="content-section">
 
+
                 <div class="section-heading">
+
 
                     <div>
 
@@ -358,6 +417,8 @@
                     </div>
 
 
+                    <!-- VIEW SUBMISSIONS -->
+
                     <a href="{{ url_for('student_submissions') }}" class="text-button">
 
                         View submissions →
@@ -373,16 +434,19 @@
 
                 {% if assignments %}
 
+
                 <div class="assignment-grid">
 
+
                     {% for assignment in assignments %}
+
 
                     <article class="assignment-card">
 
 
                         <!-- =================================================
-                             ASSIGNMENT TOP
-                             ================================================= -->
+                                     ASSIGNMENT TOP
+                                     ================================================= -->
 
                         <div class="assignment-card-top">
 
@@ -390,28 +454,40 @@
                             <!-- SUBJECT -->
 
                             <div class="subject-badge">
+
                                 {{ assignment.subject }}
+
                             </div>
 
 
-                            <!-- SUBMISSION STATUS -->
+                            <!-- =================================================
+                                         SUBMISSION STATUS
+                                         ================================================= -->
 
                             {% if assignment.submission_status == "Late Submission" %}
 
                             <span class="status-badge late">
+
                                 Late Submission
+
                             </span>
+
 
                             {% elif assignment.submission_status == "Submitted" %}
 
                             <span class="status-badge submitted">
+
                                 Submitted
+
                             </span>
+
 
                             {% else %}
 
                             <span class="status-badge pending">
+
                                 Not Submitted
+
                             </span>
 
                             {% endif %}
@@ -420,17 +496,19 @@
 
 
                         <!-- =================================================
-                             TITLE
-                             ================================================= -->
+                                     ASSIGNMENT TITLE
+                                     ================================================= -->
 
                         <h3>
+
                             {{ assignment.title }}
+
                         </h3>
 
 
                         <!-- =================================================
-                             DESCRIPTION
-                             ================================================= -->
+                                     DESCRIPTION
+                                     ================================================= -->
 
                         <p class="assignment-description">
 
@@ -441,8 +519,8 @@
 
 
                         <!-- =================================================
-                             ASSIGNMENT DETAILS
-                             ================================================= -->
+                                     ASSIGNMENT DETAILS
+                                     ================================================= -->
 
                         <div class="assignment-details">
 
@@ -456,7 +534,9 @@
                                 </span>
 
                                 <strong>
+
                                     {{ assignment.due_date }}
+
                                 </strong>
 
                             </div>
@@ -471,7 +551,9 @@
                                 </span>
 
                                 <strong>
+
                                     {{ assignment.faculty_name or '—' }}
+
                                 </strong>
 
                             </div>
@@ -480,20 +562,22 @@
 
 
                         <!-- =================================================
-                             ACTIONS
-                             ================================================= -->
+                                     ACTIONS
+                                     ================================================= -->
 
                         <div class="assignment-actions">
 
 
-                            <!-- DOWNLOAD ASSIGNMENT -->
+                            <!-- =================================================
+                                         DOWNLOAD ASSIGNMENT
+                                         ================================================= -->
 
                             {% if assignment.file_name %}
 
                             <a href="{{ url_for(
-                                        'download_assignment',
-                                        filename=assignment.file_name
-                                    ) }}" class="btn btn-small btn-outline">
+                                                    'download_assignment',
+                                                    filename=assignment.file_name
+                                                ) }}" class="btn btn-small btn-outline">
 
                                 Download
 
@@ -503,8 +587,8 @@
 
 
                             <!-- =================================================
-                                 IF SUBMITTED OR LATE
-                                 ================================================= -->
+                                         SUBMITTED / LATE SUBMISSION
+                                         ================================================= -->
 
                             {% if assignment.submission_status != "Not Submitted" %}
 
@@ -516,16 +600,18 @@
 
 
                             <!-- =================================================
-                                 IF NOT SUBMITTED
-                                 ================================================= -->
+                                         NOT SUBMITTED
+                                         ================================================= -->
 
                             {% else %}
 
                             <form method="POST" action="{{ url_for(
-                                      'student_submit',
-                                      assignment_id=assignment.id
-                                  ) }}" enctype="multipart/form-data" class="submission-form">
+                                                  'student_submit',
+                                                  assignment_id=assignment.id
+                                              ) }}" enctype="multipart/form-data" class="submission-form">
 
+
+                                <!-- FILE INPUT -->
 
                                 <label class="file-input">
 
@@ -537,6 +623,8 @@
 
                                 </label>
 
+
+                                <!-- SUBMIT BUTTON -->
 
                                 <button type="submit" class="btn btn-small btn-primary">
 
@@ -551,9 +639,12 @@
 
                         </div>
 
+
                     </article>
 
+
                     {% endfor %}
+
 
                 </div>
 
@@ -564,29 +655,37 @@
 
                 {% else %}
 
+
                 <div class="empty-state">
+
 
                     <div class="empty-icon">
                         ✦
                     </div>
 
+
                     <h3>
                         No assignments yet
                     </h3>
+
 
                     <p>
                         Assignments for your department and year
                         will appear here.
                     </p>
 
+
                 </div>
 
+
                 {% endif %}
+
 
             </section>
 
 
         </main>
+
 
     </div>
 
