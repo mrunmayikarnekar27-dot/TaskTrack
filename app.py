@@ -1,3 +1,7 @@
+import os
+from datetime import datetime
+from functools import wraps
+
 from flask import (
     Flask,
     render_template,
@@ -10,149 +14,165 @@ from flask import (
 )
 
 import mysql.connector
-import os
-
+from mysql.connector import Error
 from werkzeug.utils import secure_filename
-from functools import wraps
 from dotenv import load_dotenv
 
 
-# ==========================================================
-# APP CONFIGURATION
-# ==========================================================
-
-app = Flask(__name__)
+# ============================================================
+# LOAD ENVIRONMENT VARIABLES
+# ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-app.secret_key = os.getenv("SECRET_KEY", "tasktrack-secret-key")
+
+# ============================================================
+# FLASK APP
+# ============================================================
+
+app = Flask(__name__)
+
+app.secret_key = os.getenv(
+    "SECRET_KEY",
+    "tasktrack-secret-key"
+)
 
 
-# ==========================================================
-# DATABASE CONFIGURATION
-# ==========================================================
+# ============================================================
+# UPLOAD FOLDERS
+# ============================================================
 
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT", "3306")),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME", "tasktrackdb"),
-}
-
-SSL_CA = os.path.join(BASE_DIR, "ca.pem")
-
-
-def get_db_connection():
-
-    try:
-
-        connection = mysql.connector.connect(
-            host=DB_CONFIG["host"],
-            port=DB_CONFIG["port"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            database=DB_CONFIG["database"],
-            ssl_ca=SSL_CA,
-            ssl_verify_cert=True
-        )
-
-        return connection
-
-    except mysql.connector.Error as error:
-
-        print("DATABASE CONNECTION ERROR:", error)
-
-        return None
-
-
-# ==========================================================
-# FILE UPLOAD CONFIGURATION
-# ==========================================================
-
-ASSIGNMENT_FOLDER = os.path.join(
+ASSIGNMENT_UPLOAD_FOLDER = os.path.join(
     BASE_DIR,
     "uploads",
     "assignments"
 )
 
-SUBMISSION_FOLDER = os.path.join(
+SUBMISSION_UPLOAD_FOLDER = os.path.join(
     BASE_DIR,
     "uploads",
     "submissions"
 )
 
-os.makedirs(ASSIGNMENT_FOLDER, exist_ok=True)
-os.makedirs(SUBMISSION_FOLDER, exist_ok=True)
+os.makedirs(ASSIGNMENT_UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(SUBMISSION_UPLOAD_FOLDER, exist_ok=True)
 
 
-ALLOWED_EXTENSIONS = {
-    "pdf",
-    "doc",
-    "docx",
-    "txt",
-    "zip",
-    "rar",
-    "ppt",
-    "pptx",
-    "xls",
-    "xlsx",
-    "jpg",
-    "jpeg",
-    "png"
-}
+# ============================================================
+# DATABASE CONFIGURATION
+# ============================================================
+
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = int(os.getenv("DB_PORT", "3306"))
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+DB_NAME = os.getenv(
+    "DB_NAME",
+    "tasktrackdb"
+)
 
 
-def allowed_file(filename):
-
-    return (
-        "." in filename
-        and filename.rsplit(".", 1)[1].lower()
-        in ALLOWED_EXTENSIONS
-    )
+# Aiven SSL certificate
+CA_FILE = os.path.join(
+    BASE_DIR,
+    "ca.pem"
+)
 
 
-# ==========================================================
+# ============================================================
+# DATABASE CONNECTION
+# ============================================================
+
+def get_db_connection():
+
+    try:
+
+        connection_config = {
+            "host": DB_HOST,
+            "port": DB_PORT,
+            "user": DB_USER,
+            "password": DB_PASSWORD,
+            "database": DB_NAME
+        }
+
+        # Use SSL for Aiven
+        if os.path.exists(CA_FILE):
+
+            connection_config["ssl_ca"] = CA_FILE
+            connection_config["ssl_verify_cert"] = True
+            connection_config["ssl_verify_identity"] = True
+
+        connection = mysql.connector.connect(
+            **connection_config
+        )
+
+        return connection
+
+    except Error as e:
+
+        print("DATABASE CONNECTION ERROR:", e)
+
+        return None
+
+
+# ============================================================
 # LOGIN DECORATORS
-# ==========================================================
+# ============================================================
 
 def student_required(function):
 
     @wraps(function)
-    def wrapper(*args, **kwargs):
+    def decorated_function(*args, **kwargs):
 
-        if "user_id" not in session or session.get("role") != "student":
+        if (
+            "user_id" not in session
+            or session.get("role") != "student"
+        ):
 
-            flash("Please login as a student first.", "danger")
+            flash(
+                "Please login as a student first.",
+                "warning"
+            )
 
-            return redirect(url_for("student_login"))
+            return redirect(
+                url_for("student_login")
+            )
 
         return function(*args, **kwargs)
 
-    return wrapper
+    return decorated_function
 
 
 def faculty_required(function):
 
     @wraps(function)
-    def wrapper(*args, **kwargs):
+    def decorated_function(*args, **kwargs):
 
-        if "user_id" not in session or session.get("role") != "faculty":
+        if (
+            "user_id" not in session
+            or session.get("role") != "faculty"
+        ):
 
-            flash("Please login as faculty first.", "danger")
+            flash(
+                "Please login as faculty first.",
+                "warning"
+            )
 
-            return redirect(url_for("faculty_login"))
+            return redirect(
+                url_for("faculty_login")
+            )
 
         return function(*args, **kwargs)
 
-    return wrapper
+    return decorated_function
 
 
-# ==========================================================
+# ============================================================
 # HOME PAGE
-# ==========================================================
+# ============================================================
 
 @app.route("/")
 def index():
@@ -160,9 +180,9 @@ def index():
     return render_template("index.html")
 
 
-# ==========================================================
+# ============================================================
 # FACULTY REGISTER
-# ==========================================================
+# ============================================================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -175,22 +195,33 @@ def register():
 
         if not name or not email or not password:
 
-            flash("Please fill in all fields.", "danger")
+            flash(
+                "Please fill in all fields.",
+                "danger"
+            )
 
-            return render_template("register.html")
+            return render_template(
+                "register.html"
+            )
 
         connection = get_db_connection()
 
-        if not connection:
+        if connection is None:
 
-            flash("Unable to connect to database.", "danger")
+            flash(
+                "Database connection failed.",
+                "danger"
+            )
 
-            return render_template("register.html")
+            return render_template(
+                "register.html"
+            )
 
         cursor = connection.cursor(dictionary=True)
 
         try:
 
+            # Check existing email
             cursor.execute(
                 """
                 SELECT id
@@ -204,17 +235,38 @@ def register():
 
             if existing_user:
 
-                flash("An account with this email already exists.", "warning")
+                flash(
+                    "An account with this email already exists.",
+                    "warning"
+                )
 
-                return render_template("register.html")
+                return render_template(
+                    "register.html"
+                )
 
+            # Create faculty
             cursor.execute(
                 """
                 INSERT INTO users
-                (name, email, password, role)
-                VALUES (%s, %s, %s, 'faculty')
+                (
+                    name,
+                    email,
+                    password,
+                    role
+                )
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    'faculty'
+                )
                 """,
-                (name, email, password)
+                (
+                    name,
+                    email,
+                    password
+                )
             )
 
             connection.commit()
@@ -224,38 +276,197 @@ def register():
                 "success"
             )
 
-            return redirect(url_for("faculty_login"))
+            return redirect(
+                url_for("faculty_login")
+            )
 
-        except mysql.connector.Error as error:
+        except Error as e:
 
             connection.rollback()
 
-            print("FACULTY REGISTER ERROR:", error)
+            print(
+                "FACULTY REGISTER ERROR:",
+                e
+            )
 
-            flash("Unable to create account.", "danger")
-
-            return render_template("register.html")
+            flash(
+                "Unable to create faculty account.",
+                "danger"
+            )
 
         finally:
 
             cursor.close()
             connection.close()
 
-    return render_template("register.html")
+    return render_template(
+        "register.html"
+    )
 
 
-# ==========================================================
+# ============================================================
+# FACULTY LOGIN
+# ============================================================
+
+@app.route("/faculty/login", methods=["GET", "POST"])
+def faculty_login():
+
+    if request.method == "POST":
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        ).strip()
+
+        print("\n==============================")
+        print("FACULTY LOGIN ATTEMPT")
+        print("EMAIL ENTERED:", email)
+
+        connection = get_db_connection()
+
+        if connection is None:
+
+            flash(
+                "Database connection failed.",
+                "danger"
+            )
+
+            return render_template(
+                "faculty_login.html"
+            )
+
+        cursor = connection.cursor(
+            dictionary=True
+        )
+
+        try:
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM users
+                WHERE email = %s
+                AND role = 'faculty'
+                """,
+                (email,)
+            )
+
+            faculty = cursor.fetchone()
+
+            print(
+                "FACULTY FOUND:",
+                bool(faculty)
+            )
+
+            if faculty:
+
+                print(
+                    "FACULTY NAME:",
+                    faculty["name"]
+                )
+
+                print(
+                    "FACULTY EMAIL:",
+                    faculty["email"]
+                )
+
+                print(
+                    "FACULTY ROLE:",
+                    faculty["role"]
+                )
+
+                password_match = (
+                    faculty["password"] == password
+                )
+
+                print(
+                    "PASSWORD MATCH:",
+                    password_match
+                )
+
+            else:
+
+                password_match = False
+
+            if faculty and password_match:
+
+                session.clear()
+
+                session["user_id"] = faculty["id"]
+                session["name"] = faculty["name"]
+                session["email"] = faculty["email"]
+                session["role"] = "faculty"
+
+                print(
+                    "LOGIN SUCCESSFUL"
+                )
+
+                return redirect(
+                    url_for("faculty_dashboard")
+                )
+
+            print(
+                "LOGIN FAILED"
+            )
+
+            flash(
+                "Invalid email or password.",
+                "danger"
+            )
+
+        except Error as e:
+
+            print(
+                "FACULTY LOGIN ERROR:",
+                e
+            )
+
+            flash(
+                "Unable to login.",
+                "danger"
+            )
+
+        finally:
+
+            cursor.close()
+            connection.close()
+
+    return render_template(
+        "faculty_login.html"
+    )
+
+
+# ============================================================
 # STUDENT REGISTER
-# ==========================================================
+# ============================================================
 
-@app.route("/student/register", methods=["GET", "POST"])
+@app.route(
+    "/student/register",
+    methods=["GET", "POST"]
+)
 def student_register():
 
     if request.method == "POST":
 
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "").strip()
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        ).strip()
 
         department = request.form.get(
             "department",
@@ -267,30 +478,39 @@ def student_register():
             ""
         ).strip()
 
-        if not name or not email or not password:
-
-            flash("Please fill in all required fields.", "danger")
-
-            return render_template("student_register.html")
-
-        if not department or not year_of_study:
+        if not all([
+            name,
+            email,
+            password,
+            department,
+            year_of_study
+        ]):
 
             flash(
-                "Please select Department and Year of Study.",
+                "Please fill in all fields.",
                 "danger"
             )
 
-            return render_template("student_register.html")
+            return render_template(
+                "student_register.html"
+            )
 
         connection = get_db_connection()
 
-        if not connection:
+        if connection is None:
 
-            flash("Unable to connect to database.", "danger")
+            flash(
+                "Database connection failed.",
+                "danger"
+            )
 
-            return render_template("student_register.html")
+            return render_template(
+                "student_register.html"
+            )
 
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(
+            dictionary=True
+        )
 
         try:
 
@@ -312,7 +532,9 @@ def student_register():
                     "warning"
                 )
 
-                return render_template("student_register.html")
+                return render_template(
+                    "student_register.html"
+                )
 
             cursor.execute(
                 """
@@ -325,7 +547,15 @@ def student_register():
                     department,
                     year_of_study
                 )
-                VALUES (%s, %s, %s, 'student', %s, %s)
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    'student',
+                    %s,
+                    %s
+                )
                 """,
                 (
                     name,
@@ -343,60 +573,82 @@ def student_register():
                 "success"
             )
 
-            return redirect(url_for("student_login"))
+            return redirect(
+                url_for("student_login")
+            )
 
-        except mysql.connector.Error as error:
+        except Error as e:
 
             connection.rollback()
 
-            print("STUDENT REGISTER ERROR:", error)
+            print(
+                "STUDENT REGISTER ERROR:",
+                e
+            )
 
-            flash("Unable to create student account.", "danger")
-
-            return render_template("student_register.html")
+            flash(
+                "Unable to create student account.",
+                "danger"
+            )
 
         finally:
 
             cursor.close()
             connection.close()
 
-    return render_template("student_register.html")
+    return render_template(
+        "student_register.html"
+    )
 
 
-# ==========================================================
+# ============================================================
 # STUDENT LOGIN
-# ==========================================================
+# ============================================================
 
-@app.route("/student/login", methods=["GET", "POST"])
+@app.route(
+    "/student/login",
+    methods=["GET", "POST"]
+)
 def student_login():
 
     if request.method == "POST":
 
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "").strip()
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        ).strip()
+
+        print("\n==============================")
+        print("STUDENT LOGIN ATTEMPT")
+        print("EMAIL ENTERED:", email)
 
         connection = get_db_connection()
 
-        if not connection:
+        if connection is None:
 
-            flash("Unable to connect to database.", "danger")
+            flash(
+                "Database connection failed.",
+                "danger"
+            )
 
-            return render_template("student_login.html")
+            return render_template(
+                "student_login.html"
+            )
 
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(
+            dictionary=True
+        )
 
         try:
 
             cursor.execute(
                 """
-                SELECT
-                    id,
-                    name,
-                    email,
-                    password,
-                    role,
-                    department,
-                    year_of_study
+                SELECT *
                 FROM users
                 WHERE email = %s
                 AND role = 'student'
@@ -406,7 +658,42 @@ def student_login():
 
             student = cursor.fetchone()
 
-            if student and student["password"] == password:
+            print(
+                "STUDENT FOUND:",
+                bool(student)
+            )
+
+            if student:
+
+                print(
+                    "STUDENT NAME:",
+                    student["name"]
+                )
+
+                print(
+                    "STUDENT EMAIL:",
+                    student["email"]
+                )
+
+                print(
+                    "STUDENT ROLE:",
+                    student["role"]
+                )
+
+                password_match = (
+                    student["password"] == password
+                )
+
+                print(
+                    "PASSWORD MATCH:",
+                    password_match
+                )
+
+            else:
+
+                password_match = False
+
+            if student and password_match:
 
                 session.clear()
 
@@ -414,141 +701,29 @@ def student_login():
                 session["name"] = student["name"]
                 session["email"] = student["email"]
                 session["role"] = "student"
-                session["department"] = student["department"]
-                session["year_of_study"] = student["year_of_study"]
+
+                print(
+                    "STUDENT LOGIN SUCCESSFUL"
+                )
 
                 return redirect(
                     url_for("student_dashboard")
                 )
 
-            flash(
-                "Invalid email or password.",
-                "danger"
-            )
-
-        except mysql.connector.Error as error:
-
-            print("STUDENT LOGIN ERROR:", error)
-
-            flash(
-                "Unable to login.",
-                "danger"
-            )
-
-        finally:
-
-            cursor.close()
-            connection.close()
-
-    return render_template("student_login.html")
-
-
-# ==========================================================
-# FACULTY LOGIN
-# ==========================================================
-
-@app.route("/faculty/login", methods=["GET", "POST"])
-def faculty_login():
-
-    if request.method == "POST":
-
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "").strip()
-
-        print("================================")
-        print("FACULTY LOGIN ATTEMPT")
-        print("EMAIL ENTERED:", email)
-
-        connection = get_db_connection()
-
-        if not connection:
-
-            print("DATABASE CONNECTION FAILED")
-
-            flash(
-                "Unable to connect to database.",
-                "danger"
-            )
-
-            return render_template("faculty_login.html")
-
-        cursor = connection.cursor(dictionary=True)
-
-        try:
-
-            cursor.execute(
-                """
-                SELECT
-                    id,
-                    name,
-                    email,
-                    password,
-                    role
-                FROM users
-                WHERE email = %s
-                AND role = 'faculty'
-                """,
-                (email,)
-            )
-
-            faculty = cursor.fetchone()
-
             print(
-                "FACULTY FOUND:",
-                faculty is not None
+                "STUDENT LOGIN FAILED"
             )
-
-            if faculty:
-
-                print(
-                    "FACULTY NAME:",
-                    faculty["name"]
-                )
-
-                print(
-                    "FACULTY EMAIL:",
-                    faculty["email"]
-                )
-
-                print(
-                    "FACULTY ROLE:",
-                    faculty["role"]
-                )
-
-                print(
-                    "PASSWORD MATCH:",
-                    faculty["password"] == password
-                )
-
-            if faculty and faculty["password"] == password:
-
-                session.clear()
-
-                session["user_id"] = faculty["id"]
-                session["name"] = faculty["name"]
-                session["email"] = faculty["email"]
-                session["role"] = "faculty"
-
-                print("LOGIN SUCCESSFUL")
-                print("================================")
-
-                return redirect(
-                    url_for("faculty_dashboard")
-                )
-
-            print("LOGIN FAILED")
-            print("================================")
 
             flash(
                 "Invalid email or password.",
                 "danger"
             )
 
-        except mysql.connector.Error as error:
+        except Error as e:
 
             print(
-                "FACULTY LOGIN ERROR:",
-                error
+                "STUDENT LOGIN ERROR:",
+                e
             )
 
             flash(
@@ -561,70 +736,93 @@ def faculty_login():
             cursor.close()
             connection.close()
 
-    return render_template("faculty_login.html")
-
-
-# ==========================================================
-# LOGOUT
-# ==========================================================
-
-@app.route("/logout")
-def logout():
-
-    session.clear()
-
-    flash(
-        "You have been logged out successfully.",
-        "success"
+    return render_template(
+        "student_login.html"
     )
 
-    return redirect(url_for("index"))
 
-
-# ==========================================================
+# ============================================================
 # STUDENT DASHBOARD
-# ==========================================================
+# ============================================================
 
 @app.route("/student/dashboard")
 @student_required
 def student_dashboard():
 
+    student_id = session["user_id"]
+
     connection = get_db_connection()
 
-    if not connection:
+    if connection is None:
 
         flash(
-            "Unable to connect to database.",
+            "Database connection failed.",
             "danger"
         )
 
-        return redirect(url_for("student_login"))
+        return redirect(
+            url_for("student_login")
+        )
 
-    cursor = connection.cursor(dictionary=True)
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     try:
+
+        # ----------------------------------------------------
+        # GET STUDENT DETAILS
+        # ----------------------------------------------------
 
         cursor.execute(
             """
             SELECT
+                name,
+                email,
+                department,
+                year_of_study
+            FROM users
+            WHERE id = %s
+            """,
+            (student_id,)
+        )
+
+        student = cursor.fetchone()
+
+        if not student:
+
+            session.clear()
+
+            return redirect(
+                url_for("student_login")
+            )
+
+        # ----------------------------------------------------
+        # GET ASSIGNMENTS FOR STUDENT
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+
                 a.id,
                 a.title,
                 a.description,
                 a.subject,
                 a.due_date,
                 a.file_name,
-                a.faculty_id,
+                a.created_at,
                 a.department,
                 a.year_of_study,
-                a.created_at,
 
                 u.name AS faculty_name,
 
                 s.id AS submission_id,
-                s.file_name AS submission_file,
+                s.file_name AS submission_file_name,
                 s.submitted_at,
 
                 CASE
+
                     WHEN s.id IS NULL
                         THEN 'Not Submitted'
 
@@ -632,11 +830,12 @@ def student_dashboard():
                         THEN 'Late Submission'
 
                     ELSE 'Submitted'
+
                 END AS submission_status
 
             FROM assignments a
 
-            LEFT JOIN users u
+            JOIN users u
                 ON a.faculty_id = u.id
 
             LEFT JOIN submissions s
@@ -649,60 +848,87 @@ def student_dashboard():
             ORDER BY a.due_date ASC
             """,
             (
-                session["user_id"],
-                session.get("department"),
-                session.get("year_of_study")
+                student_id,
+                student["department"],
+                student["year_of_study"]
             )
         )
 
         assignments = cursor.fetchall()
 
-        total_assignments = len(assignments)
+        # ----------------------------------------------------
+        # DASHBOARD STATISTICS
+        # ----------------------------------------------------
+
+        total_assignments = len(
+            assignments
+        )
 
         submitted_count = sum(
             1
             for assignment in assignments
             if assignment["submission_status"]
-            in ["Submitted", "Late Submission"]
+            != "Not Submitted"
         )
 
-        pending_count = total_assignments - submitted_count
-
-        late_count = sum(
+        pending_count = sum(
             1
             for assignment in assignments
             if assignment["submission_status"]
-            == "Late Submission"
+            == "Not Submitted"
+        )
+
+        # ----------------------------------------------------
+        # MY SUBMISSIONS COUNT
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM submissions
+            WHERE student_id = %s
+            """,
+            (student_id,)
+        )
+
+        submission_result = cursor.fetchone()
+
+        my_submissions = (
+            submission_result["count"]
+            if submission_result
+            else 0
         )
 
         return render_template(
             "student_dashboard.html",
+
+            student=student,
+
             assignments=assignments,
+
             total_assignments=total_assignments,
+
             submitted_count=submitted_count,
+
             pending_count=pending_count,
-            late_count=late_count
+
+            my_submissions=my_submissions
         )
 
-    except mysql.connector.Error as error:
+    except Error as e:
 
         print(
             "STUDENT DASHBOARD ERROR:",
-            error
+            e
         )
 
         flash(
-            "Unable to load assignments.",
+            "Unable to load student dashboard.",
             "danger"
         )
 
-        return render_template(
-            "student_dashboard.html",
-            assignments=[],
-            total_assignments=0,
-            submitted_count=0,
-            pending_count=0,
-            late_count=0
+        return redirect(
+            url_for("student_login")
         )
 
     finally:
@@ -711,9 +937,106 @@ def student_dashboard():
         connection.close()
 
 
-# ==========================================================
+# ============================================================
+# STUDENT SUBMISSIONS
+# ============================================================
+
+@app.route("/student/submissions")
+@student_required
+def student_submissions():
+
+    student_id = session["user_id"]
+
+    connection = get_db_connection()
+
+    if connection is None:
+
+        flash(
+            "Database connection failed.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("student_dashboard")
+        )
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+
+                s.id,
+                s.file_name,
+                s.submitted_at,
+
+                a.id AS assignment_id,
+                a.title,
+                a.subject,
+                a.due_date,
+
+                u.name AS faculty_name,
+
+                CASE
+
+                    WHEN DATE(s.submitted_at) > a.due_date
+                        THEN 'Late Submission'
+
+                    ELSE 'Submitted'
+
+                END AS submission_status
+
+            FROM submissions s
+
+            JOIN assignments a
+                ON s.assignment_id = a.id
+
+            JOIN users u
+                ON a.faculty_id = u.id
+
+            WHERE s.student_id = %s
+
+            ORDER BY s.submitted_at DESC
+            """,
+            (student_id,)
+        )
+
+        submissions = cursor.fetchall()
+
+        return render_template(
+            "student_submissions.html",
+            submissions=submissions
+        )
+
+    except Error as e:
+
+        print(
+            "STUDENT SUBMISSIONS ERROR:",
+            e
+        )
+
+        flash(
+            "Unable to load submissions.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("student_dashboard")
+        )
+
+    finally:
+
+        cursor.close()
+        connection.close()
+
+
+# ============================================================
 # STUDENT SUBMIT ASSIGNMENT
-# ==========================================================
+# ============================================================
 
 @app.route(
     "/student/submit/<int:assignment_id>",
@@ -722,24 +1045,17 @@ def student_dashboard():
 @student_required
 def student_submit(assignment_id):
 
-    uploaded_file = request.files.get("file")
+    student_id = session["user_id"]
 
-    if not uploaded_file or uploaded_file.filename == "":
+    uploaded_file = request.files.get(
+        "file"
+    )
+
+    if not uploaded_file or not uploaded_file.filename:
 
         flash(
             "Please select a file to upload.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("student_dashboard")
-        )
-
-    if not allowed_file(uploaded_file.filename):
-
-        flash(
-            "This file type is not allowed.",
-            "danger"
+            "warning"
         )
 
         return redirect(
@@ -748,10 +1064,10 @@ def student_submit(assignment_id):
 
     connection = get_db_connection()
 
-    if not connection:
+    if connection is None:
 
         flash(
-            "Unable to connect to database.",
+            "Database connection failed.",
             "danger"
         )
 
@@ -759,18 +1075,19 @@ def student_submit(assignment_id):
             url_for("student_dashboard")
         )
 
-    cursor = connection.cursor(dictionary=True)
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     try:
 
+        # ----------------------------------------------------
+        # CHECK ASSIGNMENT
+        # ----------------------------------------------------
+
         cursor.execute(
             """
-            SELECT
-                id,
-                title,
-                due_date,
-                department,
-                year_of_study
+            SELECT *
             FROM assignments
             WHERE id = %s
             """,
@@ -790,16 +1107,47 @@ def student_submit(assignment_id):
                 url_for("student_dashboard")
             )
 
+        # ----------------------------------------------------
+        # CHECK STUDENT DETAILS
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT department, year_of_study
+            FROM users
+            WHERE id = %s
+            AND role = 'student'
+            """,
+            (student_id,)
+        )
+
+        student = cursor.fetchone()
+
+        if not student:
+
+            flash(
+                "Student account not found.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("student_login")
+            )
+
+        # ----------------------------------------------------
+        # CHECK DEPARTMENT AND YEAR
+        # ----------------------------------------------------
+
         if (
             assignment["department"]
-            != session.get("department")
+            != student["department"]
             or
             assignment["year_of_study"]
-            != session.get("year_of_study")
+            != student["year_of_study"]
         ):
 
             flash(
-                "You are not allowed to submit this assignment.",
+                "You are not eligible to submit this assignment.",
                 "danger"
             )
 
@@ -807,24 +1155,46 @@ def student_submit(assignment_id):
                 url_for("student_dashboard")
             )
 
-        filename = secure_filename(
+        # ----------------------------------------------------
+        # SAVE FILE
+        # ----------------------------------------------------
+
+        original_filename = secure_filename(
             uploaded_file.filename
         )
 
-        filename = (
-            str(session["user_id"])
-            + "_"
-            + str(assignment_id)
-            + "_"
-            + filename
+        if not original_filename:
+
+            flash(
+                "Invalid file name.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("student_dashboard")
+            )
+
+        # Add student ID and timestamp to avoid filename conflicts
+        timestamp = datetime.now().strftime(
+            "%Y%m%d%H%M%S"
+        )
+
+        stored_filename = (
+            f"{student_id}_{timestamp}_{original_filename}"
         )
 
         file_path = os.path.join(
-            SUBMISSION_FOLDER,
-            filename
+            SUBMISSION_UPLOAD_FOLDER,
+            stored_filename
         )
 
-        uploaded_file.save(file_path)
+        uploaded_file.save(
+            file_path
+        )
+
+        # ----------------------------------------------------
+        # CHECK EXISTING SUBMISSION
+        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -835,7 +1205,7 @@ def student_submit(assignment_id):
             """,
             (
                 assignment_id,
-                session["user_id"]
+                student_id
             )
         )
 
@@ -843,6 +1213,7 @@ def student_submit(assignment_id):
 
         if existing_submission:
 
+            # Update existing submission
             cursor.execute(
                 """
                 UPDATE submissions
@@ -852,15 +1223,18 @@ def student_submit(assignment_id):
                 WHERE id = %s
                 """,
                 (
-                    filename,
+                    stored_filename,
                     existing_submission["id"]
                 )
             )
 
-            message = "Assignment resubmitted successfully."
+            message = (
+                "Assignment submission updated successfully."
+            )
 
         else:
 
+            # Create new submission
             cursor.execute(
                 """
                 INSERT INTO submissions
@@ -869,54 +1243,25 @@ def student_submit(assignment_id):
                     student_id,
                     file_name
                 )
-                VALUES (%s, %s, %s)
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s
+                )
                 """,
                 (
                     assignment_id,
-                    session["user_id"],
-                    filename
+                    student_id,
+                    stored_filename
                 )
             )
 
-            message = "Assignment submitted successfully."
+            message = (
+                "Assignment submitted successfully."
+            )
 
         connection.commit()
-
-        cursor.execute(
-            """
-            SELECT
-                submitted_at,
-                %s AS due_date
-            FROM submissions
-            WHERE assignment_id = %s
-            AND student_id = %s
-            """,
-            (
-                assignment["due_date"],
-                assignment_id,
-                session["user_id"]
-            )
-        )
-
-        submission_info = cursor.fetchone()
-
-        if submission_info:
-
-            submitted_at = submission_info["submitted_at"]
-            due_date = submission_info["due_date"]
-
-            if submitted_at and due_date:
-
-                if submitted_at.date() > due_date:
-
-                    flash(
-                        "Assignment submitted, but it was submitted late.",
-                        "warning"
-                    )
-
-                    return redirect(
-                        url_for("student_dashboard")
-                    )
 
         flash(
             message,
@@ -927,13 +1272,13 @@ def student_submit(assignment_id):
             url_for("student_dashboard")
         )
 
-    except mysql.connector.Error as error:
+    except Error as e:
 
         connection.rollback()
 
         print(
             "STUDENT SUBMISSION ERROR:",
-            error
+            e
         )
 
         flash(
@@ -951,122 +1296,43 @@ def student_submit(assignment_id):
         connection.close()
 
 
-# ==========================================================
-# STUDENT SUBMISSIONS
-# ==========================================================
-
-@app.route("/student/submissions")
-@student_required
-def student_submissions():
-
-    connection = get_db_connection()
-
-    if not connection:
-
-        flash(
-            "Unable to connect to database.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("student_login")
-        )
-
-    cursor = connection.cursor(dictionary=True)
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT
-                s.id,
-                s.file_name,
-                s.submitted_at,
-
-                a.id AS assignment_id,
-                a.title,
-                a.subject,
-                a.due_date,
-                a.department,
-                a.year_of_study,
-
-                u.name AS faculty_name,
-
-                CASE
-                    WHEN DATE(s.submitted_at) > a.due_date
-                        THEN 'Late Submission'
-                    ELSE 'Submitted'
-                END AS submission_status
-
-            FROM submissions s
-
-            INNER JOIN assignments a
-                ON s.assignment_id = a.id
-
-            LEFT JOIN users u
-                ON a.faculty_id = u.id
-
-            WHERE s.student_id = %s
-
-            ORDER BY s.submitted_at DESC
-            """,
-            (session["user_id"],)
-        )
-
-        submissions = cursor.fetchall()
-
-        return render_template(
-            "student_submissions.html",
-            submissions=submissions
-        )
-
-    except mysql.connector.Error as error:
-
-        print(
-            "STUDENT SUBMISSIONS ERROR:",
-            error
-        )
-
-        flash(
-            "Unable to load submissions.",
-            "danger"
-        )
-
-        return render_template(
-            "student_submissions.html",
-            submissions=[]
-        )
-
-    finally:
-
-        cursor.close()
-        connection.close()
-
-
-# ==========================================================
+# ============================================================
 # FACULTY DASHBOARD
-# ==========================================================
+# ============================================================
 
 @app.route("/faculty/dashboard")
 @faculty_required
 def faculty_dashboard():
 
+    faculty_id = session["user_id"]
+
     connection = get_db_connection()
 
-    if not connection:
-        flash("Unable to connect to database.", "danger")
-        return redirect(url_for("faculty_login"))
+    if connection is None:
 
-    cursor = connection.cursor(dictionary=True)
+        flash(
+            "Database connection failed.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("faculty_login")
+        )
+
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     try:
 
-        # ==================================================
-        # FACULTY ASSIGNMENTS
-        # ==================================================
+        # ----------------------------------------------------
+        # GET FACULTY ASSIGNMENTS
+        # ----------------------------------------------------
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
+
                 a.id,
                 a.title,
                 a.description,
@@ -1087,6 +1353,7 @@ def faculty_dashboard():
             WHERE a.faculty_id = %s
 
             GROUP BY
+
                 a.id,
                 a.title,
                 a.description,
@@ -1098,83 +1365,112 @@ def faculty_dashboard():
                 a.created_at
 
             ORDER BY a.created_at DESC
-        """, (session["user_id"],))
+            """,
+            (faculty_id,)
+        )
 
         assignments = cursor.fetchall()
 
-        # ==================================================
-        # TOTAL ASSIGNMENTS
-        # ==================================================
+        # ----------------------------------------------------
+        # ASSIGNMENT COUNT
+        # ----------------------------------------------------
 
-        cursor.execute("""
-            SELECT COUNT(*) AS assignment_count
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS count
             FROM assignments
             WHERE faculty_id = %s
-        """, (session["user_id"],))
+            """,
+            (faculty_id,)
+        )
 
-        assignment_count = cursor.fetchone()["assignment_count"]
+        assignment_result = cursor.fetchone()
 
-        # ==================================================
+        assignment_count = (
+            assignment_result["count"]
+            if assignment_result
+            else 0
+        )
+
+        # ----------------------------------------------------
         # TOTAL SUBMISSIONS
-        # ==================================================
+        # ----------------------------------------------------
 
-        cursor.execute("""
-            SELECT COUNT(*) AS submission_count
-
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS count
             FROM submissions s
 
-            INNER JOIN assignments a
+            JOIN assignments a
                 ON s.assignment_id = a.id
 
             WHERE a.faculty_id = %s
-        """, (session["user_id"],))
+            """,
+            (faculty_id,)
+        )
 
-        submission_count = cursor.fetchone()["submission_count"]
+        submission_result = cursor.fetchone()
 
-        # ==================================================
-        # DISTINCT STUDENTS WHO SUBMITTED
-        # ==================================================
+        submission_count = (
+            submission_result["count"]
+            if submission_result
+            else 0
+        )
 
-        cursor.execute("""
-            SELECT COUNT(DISTINCT s.student_id) AS students_submitted
+        # ----------------------------------------------------
+        # UNIQUE STUDENTS WHO SUBMITTED
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT COUNT(
+                DISTINCT s.student_id
+            ) AS count
 
             FROM submissions s
 
-            INNER JOIN assignments a
+            JOIN assignments a
                 ON s.assignment_id = a.id
 
             WHERE a.faculty_id = %s
-        """, (session["user_id"],))
+            """,
+            (faculty_id,)
+        )
 
-        students_submitted = cursor.fetchone()["students_submitted"]
+        students_result = cursor.fetchone()
 
-        # ==================================================
-        # SEND DATA TO TEMPLATE
-        # ==================================================
+        students_submitted = (
+            students_result["count"]
+            if students_result
+            else 0
+        )
 
         return render_template(
             "faculty_dashboard.html",
+
             assignments=assignments,
+
             assignment_count=assignment_count,
+
             submission_count=submission_count,
+
             students_submitted=students_submitted
         )
 
-    except mysql.connector.Error as error:
+    except Error as e:
 
-        print("FACULTY DASHBOARD ERROR:", error)
+        print(
+            "FACULTY DASHBOARD ERROR:",
+            e
+        )
 
         flash(
             "Unable to load faculty dashboard.",
             "danger"
         )
 
-        return render_template(
-            "faculty_dashboard.html",
-            assignments=[],
-            assignment_count=0,
-            submission_count=0,
-            students_submitted=0
+        return redirect(
+            url_for("faculty_login")
         )
 
     finally:
@@ -1183,15 +1479,9 @@ def faculty_dashboard():
         connection.close()
 
 
-# ==========================================================
-# FACULTY UPLOAD ASSIGNMENTS
-#
-# BOTH ENDPOINT NAMES ARE PROVIDED:
-# faculty_upload
-# upload_assignments
-#
-# This prevents BuildError from old/new templates.
-# ==========================================================
+# ============================================================
+# FACULTY UPLOAD ASSIGNMENT
+# ============================================================
 
 @app.route(
     "/faculty/upload",
@@ -1203,18 +1493,8 @@ def faculty_dashboard():
     methods=["GET", "POST"],
     endpoint="upload_assignments"
 )
+@faculty_required
 def upload_assignments():
-
-    if "user_id" not in session or session.get("role") != "faculty":
-
-        flash(
-            "Please login as faculty first.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("faculty_login")
-        )
 
     if request.method == "POST":
 
@@ -1248,12 +1528,21 @@ def upload_assignments():
             ""
         ).strip()
 
-        uploaded_file = request.files.get("file")
+        uploaded_file = request.files.get(
+            "file"
+        )
 
-        if not title:
+        if not all([
+            title,
+            description,
+            subject,
+            due_date,
+            department,
+            year_of_study
+        ]):
 
             flash(
-                "Please enter assignment title.",
+                "Please fill in all assignment details.",
                 "danger"
             )
 
@@ -1261,55 +1550,11 @@ def upload_assignments():
                 "upload_assignments.html"
             )
 
-        if not due_date:
-
-            flash(
-                "Please select a due date.",
-                "danger"
-            )
-
-            return render_template(
-                "upload_assignments.html"
-            )
-
-        if not department:
-
-            flash(
-                "Please select a department.",
-                "danger"
-            )
-
-            return render_template(
-                "upload_assignments.html"
-            )
-
-        if not year_of_study:
-
-            flash(
-                "Please select year of study.",
-                "danger"
-            )
-
-            return render_template(
-                "upload_assignments.html"
-            )
-
-        if not uploaded_file or uploaded_file.filename == "":
+        if not uploaded_file or not uploaded_file.filename:
 
             flash(
                 "Please select an assignment file.",
-                "danger"
-            )
-
-            return render_template(
-                "upload_assignments.html"
-            )
-
-        if not allowed_file(uploaded_file.filename):
-
-            flash(
-                "This file type is not allowed.",
-                "danger"
+                "warning"
             )
 
             return render_template(
@@ -1320,25 +1565,23 @@ def upload_assignments():
             uploaded_file.filename
         )
 
-        filename = (
-            str(session["user_id"])
-            + "_"
-            + filename
-        )
+        if not filename:
 
-        file_path = os.path.join(
-            ASSIGNMENT_FOLDER,
-            filename
-        )
+            flash(
+                "Invalid file name.",
+                "danger"
+            )
 
-        uploaded_file.save(file_path)
+            return render_template(
+                "upload_assignments.html"
+            )
 
         connection = get_db_connection()
 
-        if not connection:
+        if connection is None:
 
             flash(
-                "Unable to connect to database.",
+                "Database connection failed.",
                 "danger"
             )
 
@@ -1349,6 +1592,31 @@ def upload_assignments():
         cursor = connection.cursor()
 
         try:
+
+            # ------------------------------------------------
+            # SAVE FILE
+            # ------------------------------------------------
+
+            timestamp = datetime.now().strftime(
+                "%Y%m%d%H%M%S"
+            )
+
+            stored_filename = (
+                f"{session['user_id']}_{timestamp}_{filename}"
+            )
+
+            file_path = os.path.join(
+                ASSIGNMENT_UPLOAD_FOLDER,
+                stored_filename
+            )
+
+            uploaded_file.save(
+                file_path
+            )
+
+            # ------------------------------------------------
+            # INSERT ASSIGNMENT
+            # ------------------------------------------------
 
             cursor.execute(
                 """
@@ -1380,7 +1648,7 @@ def upload_assignments():
                     description,
                     subject,
                     due_date,
-                    filename,
+                    stored_filename,
                     session["user_id"],
                     department,
                     year_of_study
@@ -1398,22 +1666,18 @@ def upload_assignments():
                 url_for("faculty_dashboard")
             )
 
-        except mysql.connector.Error as error:
+        except Error as e:
 
             connection.rollback()
 
             print(
                 "ASSIGNMENT UPLOAD ERROR:",
-                error
+                e
             )
 
             flash(
                 "Unable to upload assignment.",
                 "danger"
-            )
-
-            return render_template(
-                "upload_assignments.html"
             )
 
         finally:
@@ -1426,13 +1690,15 @@ def upload_assignments():
     )
 
 
-# ==========================================================
-# FACULTY SUBMISSIONS
-# ==========================================================
+# ============================================================
+# FACULTY ALL SUBMISSIONS
+# ============================================================
 
 @app.route("/faculty/submissions")
 @faculty_required
 def faculty_submissions():
+
+    faculty_id = session["user_id"]
 
     department = request.args.get(
         "department",
@@ -1446,29 +1712,32 @@ def faculty_submissions():
 
     connection = get_db_connection()
 
-    if not connection:
+    if connection is None:
 
         flash(
-            "Unable to connect to database.",
+            "Database connection failed.",
             "danger"
         )
 
         return redirect(
-            url_for("faculty_login")
+            url_for("faculty_dashboard")
         )
 
-    cursor = connection.cursor(dictionary=True)
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     try:
 
         query = """
             SELECT
+
                 s.id,
                 s.file_name,
                 s.submitted_at,
 
                 a.id AS assignment_id,
-                a.title,
+                a.title AS assignment_title,
                 a.subject,
                 a.due_date,
                 a.department,
@@ -1478,23 +1747,28 @@ def faculty_submissions():
                 u.email AS student_email,
 
                 CASE
+
                     WHEN DATE(s.submitted_at) > a.due_date
                         THEN 'Late Submission'
+
                     ELSE 'On Time'
+
                 END AS submission_status
 
             FROM submissions s
 
-            INNER JOIN assignments a
+            JOIN assignments a
                 ON s.assignment_id = a.id
 
-            INNER JOIN users u
+            JOIN users u
                 ON s.student_id = u.id
 
             WHERE a.faculty_id = %s
         """
 
-        params = [session["user_id"]]
+        params = [
+            faculty_id
+        ]
 
         if department:
 
@@ -1502,7 +1776,9 @@ def faculty_submissions():
                 AND a.department = %s
             """
 
-            params.append(department)
+            params.append(
+                department
+            )
 
         if year_of_study:
 
@@ -1510,7 +1786,9 @@ def faculty_submissions():
                 AND a.year_of_study = %s
             """
 
-            params.append(year_of_study)
+            params.append(
+                year_of_study
+            )
 
         query += """
             ORDER BY s.submitted_at DESC
@@ -1523,18 +1801,30 @@ def faculty_submissions():
 
         submissions = cursor.fetchall()
 
+        if not submissions and (
+            department or year_of_study
+        ):
+
+            flash(
+                "No submissions found for the selected Department and Year of Study.",
+                "info"
+            )
+
         return render_template(
             "submissions.html",
+
             submissions=submissions,
+
             selected_department=department,
+
             selected_year=year_of_study
         )
 
-    except mysql.connector.Error as error:
+    except Error as e:
 
         print(
             "FACULTY SUBMISSIONS ERROR:",
-            error
+            e
         )
 
         flash(
@@ -1542,11 +1832,8 @@ def faculty_submissions():
             "danger"
         )
 
-        return render_template(
-            "submissions.html",
-            submissions=[],
-            selected_department=department,
-            selected_year=year_of_study
+        return redirect(
+            url_for("faculty_dashboard")
         )
 
     finally:
@@ -1555,22 +1842,26 @@ def faculty_submissions():
         connection.close()
 
 
-# ==========================================================
-# SUBMISSIONS FOR ONE ASSIGNMENT
-# ==========================================================
+# ============================================================
+# FACULTY SUBMISSIONS FOR ONE ASSIGNMENT
+# ============================================================
 
 @app.route(
-    "/faculty/assignment/<int:assignment_id>/submissions"
+    "/faculty/submissions/<int:assignment_id>"
 )
 @faculty_required
-def faculty_assignment_submissions(assignment_id):
+def faculty_assignment_submissions(
+    assignment_id
+):
+
+    faculty_id = session["user_id"]
 
     connection = get_db_connection()
 
-    if not connection:
+    if connection is None:
 
         flash(
-            "Unable to connect to database.",
+            "Database connection failed.",
             "danger"
         )
 
@@ -1578,50 +1869,80 @@ def faculty_assignment_submissions(assignment_id):
             url_for("faculty_dashboard")
         )
 
-    cursor = connection.cursor(dictionary=True)
+    cursor = connection.cursor(
+        dictionary=True
+    )
 
     try:
+
+        # ----------------------------------------------------
+        # CHECK ASSIGNMENT BELONGS TO FACULTY
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT *
+            FROM assignments
+            WHERE id = %s
+            AND faculty_id = %s
+            """,
+            (
+                assignment_id,
+                faculty_id
+            )
+        )
+
+        assignment = cursor.fetchone()
+
+        if not assignment:
+
+            flash(
+                "Assignment not found.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("faculty_dashboard")
+            )
+
+        # ----------------------------------------------------
+        # GET SUBMISSIONS
+        # ----------------------------------------------------
 
         cursor.execute(
             """
             SELECT
+
                 s.id,
                 s.file_name,
                 s.submitted_at,
 
-                a.id AS assignment_id,
-                a.title,
-                a.subject,
-                a.due_date,
-                a.department,
-                a.year_of_study,
-
-                u.id AS student_id,
                 u.name AS student_name,
                 u.email AS student_email,
+                u.department,
+                u.year_of_study,
 
                 CASE
-                    WHEN DATE(s.submitted_at) > a.due_date
+
+                    WHEN DATE(s.submitted_at) > %s
                         THEN 'Late Submission'
+
                     ELSE 'On Time'
+
                 END AS submission_status
 
             FROM submissions s
 
-            INNER JOIN assignments a
-                ON s.assignment_id = a.id
-
-            INNER JOIN users u
+            JOIN users u
                 ON s.student_id = u.id
 
             WHERE s.assignment_id = %s
-            AND a.faculty_id = %s
 
             ORDER BY s.submitted_at DESC
             """,
             (
-                assignment_id,
-                session["user_id"]
+                assignment["due_date"],
+                assignment_id
             )
         )
 
@@ -1629,16 +1950,21 @@ def faculty_assignment_submissions(assignment_id):
 
         return render_template(
             "submissions.html",
+
             submissions=submissions,
+
+            assignment=assignment,
+
             selected_department="",
+
             selected_year=""
         )
 
-    except mysql.connector.Error as error:
+    except Error as e:
 
         print(
             "ASSIGNMENT SUBMISSIONS ERROR:",
-            error
+            e
         )
 
         flash(
@@ -1656,25 +1982,29 @@ def faculty_assignment_submissions(assignment_id):
         connection.close()
 
 
-# ==========================================================
+# ============================================================
 # DOWNLOAD ASSIGNMENT
-# ==========================================================
+# ============================================================
 
 @app.route(
     "/download/assignment/<filename>"
 )
 def download_assignment(filename):
 
+    safe_filename = secure_filename(
+        filename
+    )
+
     return send_from_directory(
-        ASSIGNMENT_FOLDER,
-        filename,
+        ASSIGNMENT_UPLOAD_FOLDER,
+        safe_filename,
         as_attachment=True
     )
 
 
-# ==========================================================
+# ============================================================
 # DOWNLOAD SUBMISSION
-# ==========================================================
+# ============================================================
 
 @app.route(
     "/download/submission/<filename>"
@@ -1682,16 +2012,39 @@ def download_assignment(filename):
 @faculty_required
 def download_submission(filename):
 
+    safe_filename = secure_filename(
+        filename
+    )
+
     return send_from_directory(
-        SUBMISSION_FOLDER,
-        filename,
+        SUBMISSION_UPLOAD_FOLDER,
+        safe_filename,
         as_attachment=True
     )
 
 
-# ==========================================================
+# ============================================================
+# LOGOUT
+# ============================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    flash(
+        "You have been logged out successfully.",
+        "success"
+    )
+
+    return redirect(
+        url_for("index")
+    )
+
+
+# ============================================================
 # ERROR HANDLERS
-# ==========================================================
+# ============================================================
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -1704,28 +2057,25 @@ def page_not_found(error):
 @app.errorhandler(500)
 def internal_server_error(error):
 
+    print(
+        "INTERNAL SERVER ERROR:",
+        error
+    )
+
     return """
-    <h2>TaskTrack Server Error</h2>
-    <p>Something went wrong. Please check the Flask terminal.</p>
+        <h2>TaskTrack Server Error</h2>
+        <p>Something went wrong. Please try again.</p>
     """, 500
 
 
-# ==========================================================
+# ============================================================
 # RUN APPLICATION
-# ==========================================================
+# ============================================================
 
 if __name__ == "__main__":
 
-    print("========================================")
-    print("TASKTRACK APPLICATION")
-    print("DATABASE USED BY FLASK:",
-          DB_CONFIG["database"])
-    print("DATABASE HOST:",
-          DB_CONFIG["host"])
-    print("========================================")
-
     app.run(
         debug=True,
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=5000
     )
