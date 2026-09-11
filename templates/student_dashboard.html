@@ -20,7 +20,9 @@
     <div class="portal-layout">
 
 
-        <!-- SIDEBAR -->
+        <!-- =====================================================
+             SIDEBAR
+             ===================================================== -->
 
         <aside class="sidebar">
 
@@ -91,6 +93,7 @@
                 <a href="{{ url_for('logout') }}" class="sidebar-logout">
 
                     <span>↪</span>
+
                     Logout
 
                 </a>
@@ -100,12 +103,16 @@
         </aside>
 
 
-        <!-- MAIN -->
+        <!-- =====================================================
+             MAIN CONTENT
+             ===================================================== -->
 
         <main class="portal-main">
 
 
-            <!-- HEADER -->
+            <!-- =================================================
+                 HEADER
+                 ================================================= -->
 
             <header class="portal-header">
 
@@ -137,7 +144,9 @@
             </header>
 
 
-            <!-- FLASH -->
+            <!-- =================================================
+                 FLASH MESSAGES
+                 ================================================= -->
 
             {% with messages = get_flashed_messages(with_categories=true) %}
 
@@ -160,7 +169,9 @@
             {% endwith %}
 
 
-            <!-- PROFILE INFO -->
+            <!-- =================================================
+                 PROFILE INFORMATION
+                 ================================================= -->
 
             <section class="student-profile-card">
 
@@ -192,13 +203,28 @@
                 <div class="profile-meta">
 
                     <div>
-                        <span>Department</span>
-                        <strong>{{ department or '—' }}</strong>
+
+                        <span>
+                            Department
+                        </span>
+
+                        <strong>
+                            {{ department or '—' }}
+                        </strong>
+
                     </div>
 
+
                     <div>
-                        <span>Year</span>
-                        <strong>{{ year_of_study or '—' }}</strong>
+
+                        <span>
+                            Year
+                        </span>
+
+                        <strong>
+                            {{ year_of_study or '—' }}
+                        </strong>
+
                     </div>
 
                 </div>
@@ -206,9 +232,14 @@
             </section>
 
 
-            <!-- STAT CARDS -->
+            <!-- =================================================
+                 STAT CARDS
+                 ================================================= -->
 
             <section class="stats-grid">
+
+
+                <!-- TOTAL ASSIGNMENTS -->
 
                 <div class="stat-card">
 
@@ -231,6 +262,8 @@
                 </div>
 
 
+                <!-- SUBMITTED -->
+
                 <div class="stat-card">
 
                     <div class="stat-icon sage-icon">
@@ -252,6 +285,8 @@
                 </div>
 
 
+                <!-- PENDING -->
+
                 <div class="stat-card">
 
                     <div class="stat-icon cream-icon">
@@ -272,6 +307,8 @@
 
                 </div>
 
+
+                <!-- MY SUBMISSIONS -->
 
                 <div class="stat-card">
 
@@ -296,7 +333,9 @@
             </section>
 
 
-            <!-- ASSIGNMENTS -->
+            <!-- =================================================
+                 ASSIGNMENTS SECTION
+                 ================================================= -->
 
             <section class="content-section">
 
@@ -328,6 +367,10 @@
                 </div>
 
 
+                <!-- =================================================
+                     ASSIGNMENT LIST
+                     ================================================= -->
+
                 {% if assignments %}
 
                 <div class="assignment-grid">
@@ -336,13 +379,30 @@
 
                     <article class="assignment-card">
 
+
+                        <!-- =================================================
+                             ASSIGNMENT TOP
+                             ================================================= -->
+
                         <div class="assignment-card-top">
+
+
+                            <!-- SUBJECT -->
 
                             <div class="subject-badge">
                                 {{ assignment.subject }}
                             </div>
 
-                            {% if assignment.submitted %}
+
+                            <!-- SUBMISSION STATUS -->
+
+                            {% if assignment.submission_status == "Late Submission" %}
+
+                            <span class="status-badge late">
+                                Late Submission
+                            </span>
+
+                            {% elif assignment.submission_status == "Submitted" %}
 
                             <span class="status-badge submitted">
                                 Submitted
@@ -351,7 +411,7 @@
                             {% else %}
 
                             <span class="status-badge pending">
-                                Pending
+                                Not Submitted
                             </span>
 
                             {% endif %}
@@ -359,10 +419,18 @@
                         </div>
 
 
+                        <!-- =================================================
+                             TITLE
+                             ================================================= -->
+
                         <h3>
                             {{ assignment.title }}
                         </h3>
 
+
+                        <!-- =================================================
+                             DESCRIPTION
+                             ================================================= -->
 
                         <p class="assignment-description">
 
@@ -372,29 +440,53 @@
                         </p>
 
 
+                        <!-- =================================================
+                             ASSIGNMENT DETAILS
+                             ================================================= -->
+
                         <div class="assignment-details">
 
+
+                            <!-- DUE DATE -->
+
                             <div>
-                                <span>Due Date</span>
+
+                                <span>
+                                    Due Date
+                                </span>
 
                                 <strong>
                                     {{ assignment.due_date }}
                                 </strong>
+
                             </div>
 
 
+                            <!-- FACULTY -->
+
                             <div>
-                                <span>Faculty</span>
+
+                                <span>
+                                    Faculty
+                                </span>
 
                                 <strong>
                                     {{ assignment.faculty_name or '—' }}
                                 </strong>
+
                             </div>
 
                         </div>
 
 
+                        <!-- =================================================
+                             ACTIONS
+                             ================================================= -->
+
                         <div class="assignment-actions">
+
+
+                            <!-- DOWNLOAD ASSIGNMENT -->
 
                             {% if assignment.file_name %}
 
@@ -410,7 +502,11 @@
                             {% endif %}
 
 
-                            {% if assignment.submitted %}
+                            <!-- =================================================
+                                 IF SUBMITTED OR LATE
+                                 ================================================= -->
+
+                            {% if assignment.submission_status != "Not Submitted" %}
 
                             <a href="{{ url_for('student_submissions') }}" class="btn btn-small btn-soft">
 
@@ -418,12 +514,18 @@
 
                             </a>
 
+
+                            <!-- =================================================
+                                 IF NOT SUBMITTED
+                                 ================================================= -->
+
                             {% else %}
 
                             <form method="POST" action="{{ url_for(
-                                            'student_submit',
-                                            assignment_id=assignment.id
-                                        ) }}" enctype="multipart/form-data" class="submission-form">
+                                      'student_submit',
+                                      assignment_id=assignment.id
+                                  ) }}" enctype="multipart/form-data" class="submission-form">
+
 
                                 <label class="file-input">
 
@@ -446,6 +548,7 @@
 
                             {% endif %}
 
+
                         </div>
 
                     </article>
@@ -453,6 +556,11 @@
                     {% endfor %}
 
                 </div>
+
+
+                <!-- =================================================
+                     NO ASSIGNMENTS
+                     ================================================= -->
 
                 {% else %}
 
@@ -481,6 +589,7 @@
         </main>
 
     </div>
+
 
 </body>
 

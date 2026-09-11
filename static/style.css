@@ -4195,3 +4195,40 @@ body.modal-open {
     }
 
 }
+
+/* ==========================================================
+   SUBMISSION STATUS BADGES
+   ========================================================== */
+
+.status-badge {
+    display: inline-block;
+    padding: 7px 13px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* SUBMITTED / ON TIME */
+
+.status-badge.submitted {
+    background: var(--sage-light);
+    color: var(--sage-dark);
+}
+
+
+/* LATE SUBMISSION */
+
+.status-badge.late {
+    background: var(--peach-light);
+    color: var(--peach-dark);
+}
+
+
+/* NOT SUBMITTED */
+
+.status-badge.pending {
+    background: var(--lavender-light);
+    color: var(--lavender-dark);
+}

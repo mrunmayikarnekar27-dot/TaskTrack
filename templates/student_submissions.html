@@ -20,11 +20,17 @@
     <div class="portal-layout">
 
 
+        <!-- =====================================================
+             SIDEBAR
+             ===================================================== -->
+
         <aside class="sidebar">
 
             <div class="sidebar-brand">
 
-                <div class="brand-mark">T</div>
+                <div class="brand-mark">
+                    T
+                </div>
 
                 <div>
                     <strong>TaskTrack</strong>
@@ -69,6 +75,10 @@
             </nav>
 
 
+            <!-- =================================================
+                 SIDEBAR USER
+                 ================================================= -->
+
             <div class="sidebar-bottom">
 
                 <div class="sidebar-user">
@@ -94,7 +104,10 @@
 
                 <a href="{{ url_for('logout') }}" class="sidebar-logout">
 
-                    <span>↪</span>
+                    <span>
+                        ↪
+                    </span>
+
                     Logout
 
                 </a>
@@ -104,8 +117,16 @@
         </aside>
 
 
+        <!-- =====================================================
+             MAIN CONTENT
+             ===================================================== -->
+
         <main class="portal-main">
 
+
+            <!-- =================================================
+                 HEADER
+                 ================================================= -->
 
             <header class="portal-header">
 
@@ -135,6 +156,10 @@
             </header>
 
 
+            <!-- =================================================
+                 FLASH MESSAGES
+                 ================================================= -->
+
             {% with messages = get_flashed_messages(with_categories=true) %}
 
             {% if messages %}
@@ -156,6 +181,10 @@
             {% endwith %}
 
 
+            <!-- =================================================
+                 SUBMISSIONS
+                 ================================================= -->
+
             {% if submissions %}
 
             <section class="submission-grid">
@@ -164,57 +193,132 @@
 
                 <article class="submission-card">
 
+
+                    <!-- =================================================
+                         CARD HEADER
+                         ================================================= -->
+
                     <div class="submission-card-header">
 
                         <div class="submission-file-icon">
                             ✓
                         </div>
 
+
+                        <!-- =================================================
+                             SUBMISSION STATUS
+                             ================================================= -->
+
+                        {% if submission.submission_status == "Late Submission" %}
+
+                        <span class="status-badge late">
+                            Late Submission
+                        </span>
+
+                        {% else %}
+
                         <span class="status-badge submitted">
                             Submitted
                         </span>
 
+                        {% endif %}
+
                     </div>
 
+
+                    <!-- =================================================
+                         SUBJECT
+                         ================================================= -->
 
                     <span class="subject-badge">
                         {{ submission.subject }}
                     </span>
 
 
+                    <!-- =================================================
+                         ASSIGNMENT TITLE
+                         ================================================= -->
+
                     <h2>
                         {{ submission.assignment_title }}
                     </h2>
 
 
+                    <!-- =================================================
+                         DESCRIPTION
+                         ================================================= -->
+
                     <p>
+
                         {{ submission.description or
                         'No description provided.' }}
+
                     </p>
 
 
+                    <!-- =================================================
+                         SUBMISSION INFORMATION
+                         ================================================= -->
+
                     <div class="submission-info">
 
+
+                        <!-- FACULTY -->
+
                         <div>
-                            <span>Faculty</span>
+
+                            <span>
+                                Faculty
+                            </span>
+
                             <strong>
                                 {{ submission.faculty_name or '—' }}
                             </strong>
+
                         </div>
 
+
+                        <!-- DUE DATE -->
+
                         <div>
-                            <span>Submitted</span>
+
+                            <span>
+                                Due Date
+                            </span>
+
+                            <strong>
+                                {{ submission.due_date or '—' }}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- SUBMITTED DATE -->
+
+                        <div>
+
+                            <span>
+                                Submitted
+                            </span>
+
                             <strong>
                                 {{ submission.submitted_at }}
                             </strong>
+
                         </div>
 
                     </div>
 
 
+                    <!-- =================================================
+                         UPLOADED FILE
+                         ================================================= -->
+
                     <div class="submission-file">
 
-                        <span>📄</span>
+                        <span>
+                            📄
+                        </span>
 
                         <div>
 
@@ -230,11 +334,17 @@
 
                     </div>
 
+
                 </article>
 
                 {% endfor %}
 
             </section>
+
+
+            <!-- =================================================
+                 NO SUBMISSIONS
+                 ================================================= -->
 
             {% else %}
 
@@ -266,6 +376,7 @@
         </main>
 
     </div>
+
 
 </body>
 

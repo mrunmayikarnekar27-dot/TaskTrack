@@ -4,7 +4,6 @@
 
 <head>
 
-    ```
     <meta charset="UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,19 +11,19 @@
     <title>Submissions | TaskTrack</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    ```
 
 </head>
 
+
 <body class="portal-body">
 
-    ```
+
     <div class="portal-layout">
 
 
         <!-- =====================================================
-         SIDEBAR
-         ===================================================== -->
+             SIDEBAR
+             ===================================================== -->
 
         <aside class="sidebar">
 
@@ -53,18 +52,16 @@
             </div>
 
 
-
             <!-- NAVIGATION -->
 
             <nav class="sidebar-nav">
-
 
                 <span class="nav-section-title">
                     MAIN MENU
                 </span>
 
 
-                <!-- Dashboard -->
+                <!-- DASHBOARD -->
 
                 <a href="{{ url_for('faculty_dashboard') }}" class="sidebar-link">
 
@@ -79,8 +76,7 @@
                 </a>
 
 
-
-                <!-- Upload Assignment -->
+                <!-- UPLOAD ASSIGNMENT -->
 
                 <a href="{{ url_for('faculty_upload') }}" class="sidebar-link">
 
@@ -95,8 +91,7 @@
                 </a>
 
 
-
-                <!-- Submissions -->
+                <!-- SUBMISSIONS -->
 
                 <a href="{{ url_for('faculty_submissions') }}" class="sidebar-link active">
 
@@ -110,12 +105,12 @@
 
                 </a>
 
-
             </nav>
 
 
-
-            <!-- USER DETAILS -->
+            <!-- =================================================
+                 USER DETAILS
+                 ================================================= -->
 
             <div class="sidebar-bottom">
 
@@ -152,7 +147,6 @@
                 </div>
 
 
-
                 <!-- LOGOUT -->
 
                 <a href="{{ url_for('logout') }}" class="sidebar-logout">
@@ -172,21 +166,21 @@
         </aside>
 
 
-
         <!-- =====================================================
-         MAIN CONTENT
-         ===================================================== -->
+             MAIN CONTENT
+             ===================================================== -->
 
         <main class="portal-main">
 
 
-            <!-- PAGE HEADER -->
+            <!-- =================================================
+                 PAGE HEADER
+                 ================================================= -->
 
             <header class="portal-header">
 
 
                 <div>
-
 
                     <span class="page-kicker">
                         FACULTY PORTAL
@@ -202,17 +196,15 @@
                         View and manage student assignment submissions.
                     </p>
 
-
                 </div>
 
 
             </header>
 
 
-
             <!-- =================================================
-             FLASH MESSAGES
-             ================================================= -->
+                 FLASH MESSAGES
+                 ================================================= -->
 
             {% with messages = get_flashed_messages(
             with_categories=true
@@ -247,10 +239,9 @@
             {% endwith %}
 
 
-
             <!-- =================================================
-             SUBMISSION MANAGEMENT
-             ================================================= -->
+                 SUBMISSION MANAGEMENT
+                 ================================================= -->
 
             <section class="content-section">
 
@@ -261,7 +252,6 @@
 
 
                     <div>
-
 
                         <span class="section-kicker">
                             STUDENT WORK
@@ -278,17 +268,15 @@
                             submitted assignment files.
                         </p>
 
-
                     </div>
 
 
                 </div>
 
 
-
-                <!-- =============================================
-                 FILTER SECTION
-                 ============================================= -->
+                <!-- =================================================
+                     FILTER SECTION
+                     ================================================= -->
 
                 <div class="submission-filter-card">
 
@@ -297,7 +285,6 @@
 
 
                         <div>
-
 
                             <span class="filter-kicker">
                                 FILTER SUBMISSIONS
@@ -308,32 +295,24 @@
                                 Filter by Department and Year
                             </h3>
 
-
                         </div>
 
 
                     </div>
 
 
-
                     <!-- FILTER FORM -->
 
-                    <form method="GET" action="{{ url_for(
-                          'faculty_submissions'
-                      ) }}" class="submission-filter-form">
+                    <form method="GET" action="{{ url_for('faculty_submissions') }}" class="submission-filter-form">
 
 
-                        <!-- =====================================
-                         DEPARTMENT
-                         ===================================== -->
+                        <!-- DEPARTMENT -->
 
                         <div class="filter-group">
 
 
                             <label for="department">
-
                                 Department
-
                             </label>
 
 
@@ -341,9 +320,7 @@
 
 
                                 <option value="">
-
                                     All Departments
-
                                 </option>
 
 
@@ -388,18 +365,13 @@
                         </div>
 
 
-
-                        <!-- =====================================
-                         YEAR OF STUDY
-                         ===================================== -->
+                        <!-- YEAR -->
 
                         <div class="filter-group">
 
 
                             <label for="year_of_study">
-
                                 Year of Study
-
                             </label>
 
 
@@ -407,9 +379,7 @@
 
 
                                 <option value="">
-
                                     All Years
-
                                 </option>
 
 
@@ -440,7 +410,6 @@
                         </div>
 
 
-
                         <!-- FILTER BUTTON -->
 
                         <button type="submit" class="btn btn-primary filter-btn">
@@ -450,15 +419,12 @@
                         </button>
 
 
-
                         <!-- CLEAR FILTER -->
 
                         {% if selected_department or selected_year %}
 
 
-                        <a href="{{ url_for(
-                            'faculty_submissions'
-                        ) }}" class="btn btn-outline filter-clear-btn">
+                        <a href="{{ url_for('faculty_submissions') }}" class="btn btn-outline filter-clear-btn">
 
                             Clear Filters
 
@@ -474,10 +440,9 @@
                 </div>
 
 
-
-                <!-- =============================================
-                 ACTIVE FILTER INFORMATION
-                 ============================================= -->
+                <!-- =================================================
+                     ACTIVE FILTER INFORMATION
+                     ================================================= -->
 
                 {% if selected_department or selected_year %}
 
@@ -490,44 +455,29 @@
                     </span>
 
 
-
                     {% if selected_department %}
 
-
                     <strong>
-
                         {{ selected_department }}
-
                     </strong>
 
-
                     {% endif %}
-
 
 
                     {% if selected_department and selected_year %}
 
-
                     <span class="filter-separator">
-
                         •
-
                     </span>
-
 
                     {% endif %}
 
 
-
                     {% if selected_year %}
 
-
                     <strong>
-
                         {{ selected_year }}
-
                     </strong>
-
 
                     {% endif %}
 
@@ -538,10 +488,9 @@
                 {% endif %}
 
 
-
-                <!-- =============================================
-                 SUBMISSIONS TABLE
-                 ============================================= -->
+                <!-- =================================================
+                     SUBMISSIONS TABLE
+                     ================================================= -->
 
                 {% if submissions %}
 
@@ -559,9 +508,7 @@
 
                             <thead>
 
-
                                 <tr>
-
 
                                     <th>
                                         Student
@@ -589,7 +536,17 @@
 
 
                                     <th>
+                                        Due Date
+                                    </th>
+
+
+                                    <th>
                                         Submitted
+                                    </th>
+
+
+                                    <th>
+                                        Status
                                     </th>
 
 
@@ -602,12 +559,9 @@
                                         Action
                                     </th>
 
-
                                 </tr>
 
-
                             </thead>
-
 
 
                             <!-- TABLE BODY -->
@@ -625,12 +579,10 @@
 
                                     <td>
 
-
                                         <div class="student-table-info">
 
 
                                             <div class="table-avatar">
-
 
                                                 {% if submission.student_name %}
 
@@ -644,7 +596,6 @@
                                                 S
 
                                                 {% endif %}
-
 
                                             </div>
 
@@ -660,12 +611,10 @@
 
                                         </div>
 
-
                                     </td>
 
 
-
-                                    <!-- STUDENT EMAIL -->
+                                    <!-- EMAIL -->
 
                                     <td>
 
@@ -674,11 +623,9 @@
                                     </td>
 
 
-
                                     <!-- ASSIGNMENT -->
 
                                     <td>
-
 
                                         <span class="assignment-name">
 
@@ -688,9 +635,7 @@
 
                                         </span>
 
-
                                     </td>
-
 
 
                                     <!-- DEPARTMENT -->
@@ -704,7 +649,6 @@
                                     </td>
 
 
-
                                     <!-- YEAR -->
 
                                     <td>
@@ -716,8 +660,18 @@
                                     </td>
 
 
+                                    <!-- DUE DATE -->
 
-                                    <!-- SUBMITTED DATE -->
+                                    <td>
+
+                                        {{
+                                        submission.due_date or '—'
+                                        }}
+
+                                    </td>
+
+
+                                    <!-- SUBMITTED DATE/TIME -->
 
                                     <td>
 
@@ -728,11 +682,37 @@
                                     </td>
 
 
+                                    <!-- STATUS -->
+
+                                    <td>
+
+
+                                        {% if submission.submission_status == "Late Submission" %}
+
+                                        <span class="status-badge late">
+
+                                            Late Submission
+
+                                        </span>
+
+
+                                        {% else %}
+
+                                        <span class="status-badge submitted">
+
+                                            On Time
+
+                                        </span>
+
+                                        {% endif %}
+
+
+                                    </td>
+
 
                                     <!-- SUBMITTED FILE -->
 
                                     <td>
-
 
                                         <span class="file-name">
 
@@ -744,15 +724,12 @@
 
                                         </span>
 
-
                                     </td>
-
 
 
                                     <!-- DOWNLOAD -->
 
                                     <td>
-
 
                                         <a href="{{ url_for(
                                             'download_submission',
@@ -762,7 +739,6 @@
                                             Download
 
                                         </a>
-
 
                                     </td>
 
@@ -785,10 +761,9 @@
                 </div>
 
 
-
-                <!-- =============================================
-                 NO SUBMISSIONS
-                 ============================================= -->
+                <!-- =================================================
+                     NO SUBMISSIONS
+                     ================================================= -->
 
                 {% else %}
 
@@ -797,11 +772,8 @@
 
 
                     <div class="empty-icon">
-
                         ✓
-
                     </div>
-
 
 
                     {% if selected_department or selected_year %}
@@ -818,9 +790,7 @@
                     </p>
 
 
-                    <a href="{{ url_for(
-                        'faculty_submissions'
-                    ) }}" class="btn btn-outline">
+                    <a href="{{ url_for('faculty_submissions') }}" class="btn btn-outline">
 
                         Clear Filters
 
@@ -857,7 +827,7 @@
 
 
     </div>
-    ```
+
 
 </body>
 
